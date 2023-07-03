@@ -24,7 +24,7 @@ import {
 const DailyReader = () => {
     const [pills, setPills] = React.useState("1");
     const [collapseOpen, setCollapseOpen] = React.useState(false);
-    const [books, setBooks] = useState('')
+    const [books, setBooks] = useState(43)
     const [book, setBook] = useState('Mark')
     const [testament, setTestamant] = useState('Old')
     const [title, setTitle] = useState('Reading for today')
@@ -33,7 +33,7 @@ const DailyReader = () => {
     const [verse, setVerse] = useState(1)
     const [counter, setCounter] = useState(0)
 
-    const url = api.BASE_URL + api.BOOK + books + api.CHAPTER + chapter
+    const url = api.BASE_URL + api.BOOK + books+ api.CHAPTER + chapter
     console.log("bible reading url ====>> " + url)
 
 
@@ -79,6 +79,7 @@ const DailyReader = () => {
 
     const handleResponse = (response) => {
         console.log("bible api response ===> " + response)
+        
     }
    
     const handleMouseEnter = () => {
