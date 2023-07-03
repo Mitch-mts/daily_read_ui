@@ -4,58 +4,35 @@ import React from "react";
 // reactstrap components
 import { Container } from "reactstrap";
 
-function DarkFooter() {
+function DarkFooter(props) {
   return (
     <footer className="footer" data-background-color="black">
-      <Container>
+    <Container fluid={props.fluid}>
         <nav>
           <ul>
             <li>
-              <a
-                href="https://www.creative-tim.com?ref=nukr-dark-footer"
-                target="_blank"
-              >
-                Creative Tim
-              </a>
-            </li>
-            <li>
-              <a
-                href="http://presentation.creative-tim.com?ref=nukr-dark-footer"
-                target="_blank"
-              >
-                About Us
-              </a>
-            </li>
-            <li>
-              <a
-                href="http://blog.creative-tim.com?ref=nukr-dark-footer"
-                target="_blank"
-              >
-                Blog
-              </a>
+                <i>BigMitch Innovations</i>
             </li>
           </ul>
         </nav>
-        <div className="copyright" id="copyright">
-          © {new Date().getFullYear()}, Designed by{" "}
+        <div className="copyright">
+        &copy; {1900 + new Date().getYear()}, Designed with &#128149; by{" "}
           <a
-            href="https://www.invisionapp.com?ref=nukr-dark-footer"
+            href="#"
             target="_blank"
+            rel="noopener noreferrer"
           >
-            Invision
+            BigMitch Innovations
           </a>
-          . Coded by{" "}
-          <a
-            href="https://www.creative-tim.com?ref=nukr-dark-footer"
-            target="_blank"
-          >
-            Creative Tim
-          </a>
-          .
         </div>
       </Container>
     </footer>
   );
 }
+
+DarkFooter.defaultProps = {
+  default: false,
+  fluid: false,
+};
 
 export default DarkFooter;
