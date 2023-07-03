@@ -61,6 +61,7 @@ const DailyReader = () => {
         }
     ]
 
+    
     useEffect(() => {
         axios.get(url)
         .then(handleResponse)
