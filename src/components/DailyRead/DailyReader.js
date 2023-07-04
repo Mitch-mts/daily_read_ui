@@ -13,6 +13,8 @@ import {
     UncontrolledDropdown,
     Button,
     Navbar,
+    FormGroup,
+    Input,
     Nav,
     Collapse,
     Container,
@@ -22,47 +24,29 @@ import {
 
 
 const DailyReader = () => {
-    const [pills, setPills] = React.useState("1");
     const [collapseOpen, setCollapseOpen] = React.useState(false);
     const [books, setBooks] = useState(43)
-    const [book, setBook] = useState('Mark')
-    const [testament, setTestamant] = useState('Old')
+    const [book, setBook] = useState('')
+    const [testament, setTestamant] = useState('')
     const [title, setTitle] = useState('Reading for today')
     const [colour, setColour] = useState('royalblue')
-    const [chapter, setChapter] = useState(1)
-    const [verse, setVerse] = useState(1)
-    const [counter, setCounter] = useState(0)
+    const [chapter, setChapter] = useState('')
+    const [chapterId, setChapterId] = useState(1)
+    const [verse, setVerse] = useState('')
+    const [verseId, setVerseId] = useState('')
+    const [showButton, setShowButton] = useState(false)
+    const [disabled, setDiabled] = useState(true)
 
-    const url = api.BASE_URL + api.BOOK + books+ api.CHAPTER + chapter
+    const url = api.BIBLE_API + api.BOOK + books+ api.CHAPTER + chapterId
     console.log("bible reading url ====>> " + url)
 
+    
+   
 
-    const bookOptions = [
-        {
-            name: "Matthew"
-        },
-        {
-            name: "Mark"
-        },
-        {
-            name: "Luke"
-        },
-        {
-            name: "John"
-        }
-    ]
-
-    const testamentOptions = [
-        {
-            name: "Old"
-        },
-        {
-            name: "New"
-        }
-    ]
 
     
     useEffect(() => {
+
         axios.get(url)
         .then(handleResponse)
         .catch((error) => {
@@ -76,15 +60,46 @@ const DailyReader = () => {
                 )
             )
         })
+
+       
     },[])
 
     const handleResponse = (response) => {
         console.log("bible api response ===> " + response)
+        var data = response.data.result
+        console.log("data response ==>" + data)
+
+        data.map(reading => {
+            var chapter = reading.chapterId
+            var verseId = reading.verseId
+            var verse = reading.verse
+            var book = reading.book.name
+            var testament = reading.book.testament
+            var bookId = reading.book.id
+            setVerse(verse)
+            setChapter(chapter)
+            setBook(book)
+            setVerseId(verseId)
+
+         
+            if(testament === "NT"){
+                setTestamant("New Testament")
+            }else{
+                setTestamant("Old Testament")
+            }
+
+            console.log("chapter => " + chapter)
+            console.log("verseId => " + verseId)
+            console.log("verse => " + verse)
+            console.log("book => " + book)
+            console.log("testament => " + testament)
+            console.log("bookId => " + bookId)
+        })
+
         
     }
    
     const handleMouseEnter = () => {
-        let heading = title === "Reading for today" ? "Select your reading for today" : "Reading for today"
         setTitle("Select your reading for today")
         setColour("purple")
     }
@@ -94,6 +109,44 @@ const DailyReader = () => {
         setColour("royalblue")
     }
 
+    const handleChangeButton = () => {
+        setDiabled(false)
+        setShowButton(true)
+    }
+
+    const handleSubmitButton = () => {
+        const url = api.BIBLE_API + api.BOOK + books+ api.CHAPTER + chapterId
+
+        axios.get(url)
+        .then(handleResponse)
+        .catch((error) => {
+            console.log("error occured " + error.message)
+            let message = error.message === 'Network Error' ? 'Service temporarily unavailable' : error.message
+            return(
+                Swal.fire(
+                    'Error',
+                    message,
+                    'error'
+                )
+            )
+        })
+
+        Swal.fire(
+            "Your Reading",
+            "God is good all the time",
+            "sucess"
+            )
+
+        setDiabled(true)
+        setShowButton(false)
+    }
+
+    var button;
+    if(showButton){
+        button = <Button className="btn-round" color="success" type="button" onClick={handleSubmitButton}>Open Reading</Button>
+    }else{
+        button = <Button className="btn-round" color="danger" type="button" onClick={handleChangeButton}> Edit Reading</Button>
+    }
 
 
     return(
@@ -107,113 +160,63 @@ const DailyReader = () => {
                                 <Container>
                                 <Collapse isOpen={collapseOpen} navbar>
                                     <Nav navbar>
-                                        <UncontrolledDropdown nav>
-                                            <DropdownToggle
-                                            aria-haspopup={true}
-                                            caret
-                                            color="default"
-                                            href="#"
-                                            nav
-                                            >
-                                                <p>Testament: {testament}</p>
-                                            </DropdownToggle>
 
-                                            <DropdownMenu>
-                                            {testamentOptions.map(testament => {
-                                                        return(
-                                                            <DropdownItem
-                                                                href="#"
-                                                                onClick={(e) => e.preventDefault()}
-                                                            >
-                                                                {testament.name}
-                                                            </DropdownItem>
-                                                        )
-                                                })}
-                                            </DropdownMenu>
-                                        </UncontrolledDropdown>
+                                        <Col lg="3" sm="3">
+                                            <FormGroup>
+                                            <label style={{ color: "white" }}><b><i>Testatment</i></b></label>
+                                            <Input
+                                                defaultValue={testament}
+                                                placeholder="Testament"
+                                                type="text"
+                                                style={{backgroundColor:"white" }}
+                                                disabled={disabled}
+                                            ></Input>
+                                            </FormGroup>
+                                        </Col>
 
-                                        <UncontrolledDropdown nav>
-                                            <DropdownToggle
-                                            aria-haspopup={true}
-                                            caret
-                                            color="default"
-                                            href="#"
-                                            nav
-                                            >
-                                                <p>Book: {book}</p>
-                                            </DropdownToggle>
+                                        <Col lg="3" sm="3">
+                                            <FormGroup>
+                                            <label style={{ color: "white" }}><b><i>Book</i></b></label>
+                                            <Input
+                                                defaultValue={book}
+                                                placeholder="Book"
+                                                type="text"
+                                                style={{backgroundColor:"white" }}
+                                                disabled={disabled}
+                                            ></Input>
+                                            </FormGroup>
+                                        </Col>
 
-                                            <DropdownMenu>
-                                                {bookOptions.map(book => {
-                                                        return(
-                                                            <DropdownItem
-                                                                href="#"
-                                                                onClick={(e) => e.preventDefault()}
-                                                            >
-                                                                {book.name}
-                                                            </DropdownItem>
-                                                        )
-                                                })}
-                                                
-                                            </DropdownMenu>
-                                        </UncontrolledDropdown>
+                                        <Col lg="3" sm="3">
+                                            <FormGroup>
+                                            <label style={{ color: "white" }}><b><i>Chapter</i></b></label>
+                                            <Input
+                                                defaultValue={chapter}
+                                                placeholder="Chapter"
+                                                type="text"
+                                                style={{backgroundColor:"white" }}
+                                                disabled={disabled}
+                                            ></Input>
+                                            </FormGroup>
+                                        </Col>
 
-                                        <UncontrolledDropdown nav>
-                                            <DropdownToggle
-                                            aria-haspopup={true}
-                                            caret
-                                            color="default"
-                                            href="#"
-                                            nav
-                                            >
-                                                <p>Chapter: {chapter}</p>
-                                            </DropdownToggle>
-
-                                            <DropdownMenu>
-                                                {bookOptions.map(() => {
-                                                        return(
-                                                            <DropdownItem
-                                                                href="#"
-                                                                onClick={(e) => e.preventDefault()}
-                                                            >
-                                                                {counter}
-                                                            </DropdownItem>
-                                                        )
-                                                })}
-                                                
-                                            </DropdownMenu>
-                                        </UncontrolledDropdown>
-
-                                        <UncontrolledDropdown nav>
-                                            <DropdownToggle
-                                            aria-haspopup={true}
-                                            caret
-                                            color="default"
-                                            href="#"
-                                            nav
-                                            >
-                                                <p>Verse: {verse}</p>
-                                            </DropdownToggle>
-
-                                            <DropdownMenu>
-                                                {bookOptions.map(book => {
-                                                        return(
-                                                            <DropdownItem
-                                                                href="#"
-                                                                onClick={(e) => e.preventDefault()}
-                                                            >
-                                                                {book.name}
-                                                            </DropdownItem>
-                                                        )
-                                                })}
-                                                
-                                            </DropdownMenu>
-                                        </UncontrolledDropdown>
+                                        <Col lg="3" sm="3">
+                                            <FormGroup>
+                                            <label style={{ color: "white" }}><b><i>Verse</i></b></label>
+                                            <Input
+                                                defaultValue={verseId}
+                                                placeholder="Verse"
+                                                type="text"
+                                                style={{backgroundColor:"white"}}
+                                                disabled={disabled}
+                                            ></Input>
+                                            </FormGroup>
+                                        </Col>
                                     </Nav>
                                 </Collapse>
-                                <Button className="btn-round" color="success" type="button">
-                                    Open Reading
-                                </Button>
+                               
+                                {button}
+                               
                                 </Container>
                             </Navbar>
                         </Col>
@@ -231,14 +234,7 @@ const DailyReader = () => {
                                 </CardHeader>
                                 <CardBody>
                                     <p>
-                                        I think that’s a responsibility that I have, to push
-                                        possibilities, to show people, this is the level that
-                                        things could be at. So when you get something that has
-                                        the name Kanye West on it, it’s supposed to be pushing
-                                        the furthest possibilities. I will be the leader of a
-                                        company that ends up being worth billions of dollars,
-                                        because I got the answers. I understand culture. I am
-                                        the nucleus.
+                                        {verse}
                                     </p>
                                 </CardBody>
                             </Card>
