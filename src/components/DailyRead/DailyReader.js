@@ -7,10 +7,7 @@ import {
     Card,
     CardHeader,
     CardBody,
-    DropdownToggle,
-    DropdownMenu,
-    DropdownItem,
-    UncontrolledDropdown,
+    UncontrolledTooltip,
     Button,
     Navbar,
     FormGroup,
@@ -143,9 +140,39 @@ const DailyReader = () => {
 
     var button;
     if(showButton){
-        button = <Button className="btn-round" color="success" type="button" onClick={handleSubmitButton}>Open Reading</Button>
+            button = <>
+            <Button className="btn-round btn-tooltip" 
+            color="success" 
+            type="button" 
+            id="edit"
+            onClick={handleSubmitButton}> 
+                Open Reading
+            </Button>
+            <UncontrolledTooltip
+                    delay={0}
+                    placement="right"
+                    target="edit"
+                >
+                    &#128515; Click to read
+                </UncontrolledTooltip>
+        </>
     }else{
-        button = <Button className="btn-round" color="danger" type="button" onClick={handleChangeButton}> Edit Reading</Button>
+        button = <>
+            <Button className="btn-round btn-tooltip" 
+            color="danger" 
+            type="button" 
+            id="edit"
+            onClick={handleChangeButton}> 
+                Edit Reading
+            </Button>
+            <UncontrolledTooltip
+                    delay={0}
+                    placement="right"
+                    target="edit"
+                >
+                    &#128519; Click here to set your own bible reading
+                </UncontrolledTooltip>
+        </>
     }
 
 
