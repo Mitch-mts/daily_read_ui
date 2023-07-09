@@ -24,14 +24,14 @@ import Utils from "./Utils.js";
 
 const DailyReader = () => {
     const [collapseOpen, setCollapseOpen] = React.useState(false);
-    const [book, setBook] = useState('')
+    const [book, setBook] = useState('Genesis')
     const [bookId, setBookId] = useState('')
-    const [testament, setTestamant] = useState('')
+    const [testament, setTestamant] = useState('Old Testament')
     const [title, setTitle] = useState('Reading for today')
     const [colour, setColour] = useState('royalblue')
-    const [chapter, setChapter] = useState('')
+    const [chapter, setChapter] = useState('1')
     const [verse, setVerse] = useState('In the beginning God created the heaven and the earth.')
-    const [verseId, setVerseId] = useState('')
+    const [verseId, setVerseId] = useState('1')
     const [showButton, setShowButton] = useState(false)
     const [disabled, setDiabled] = useState(true)
 
