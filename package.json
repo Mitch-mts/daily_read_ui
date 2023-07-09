@@ -11,10 +11,10 @@
     "react-datetime": "3.2.0",
     "react-dom": ">=16.8.0",
     "react-router-dom": "6.11.1",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "reactstrap": "8.10.0",
     "sass": "1.62.1",
-    "sweetalert2": "^11.7.12"
+    "sweetalert2": "^11.4.8"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -45,7 +45,7 @@
     "react-dom": ">=16.8.0"
   },
   "optionalDependencies": {
-    "@babel/core": "7.18.9",
+    "@babel/core": "^7.22.8",
     "typescript": "5.0.4"
   },
   "overrides": {
@@ -53,5 +53,9 @@
     "fsevents": "2.3.2",
     "chokidar": "3.5.3"
   },
-  "proxy": "https://bible-go-api.rkeplin.com/"
+  "proxy": "https://bible-go-api.rkeplin.com/",
+  "devDependencies": {
+    "tailwindcss": "^3.3.2"
+  },
+  "start": "node --openssl-legacy-provider index.js"
 }

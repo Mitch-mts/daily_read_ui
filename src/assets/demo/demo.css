@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .tim-row {
   margin-bottom: 20px;
 }
@@ -455,14 +459,14 @@
 }
 
 .brand .n-logo {
-  max-width: 100px;
+  max-width: 200px;
   margin-bottom: 40px;
 }
 
 .invision-logo {
   max-width: 70px;
   top: -2px;
-  position: relative;
+  position: center;
 }
 
 .creative-tim-logo {
