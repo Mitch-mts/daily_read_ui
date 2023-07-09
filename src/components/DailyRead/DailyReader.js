@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import * as api from "./api/ApiConstants.js"
+import { Utility } from "./utility/Utility.js";
 
 import {
     Card,
@@ -18,61 +19,50 @@ import {
     Row,
     Col,
   } from "reactstrap";
+import Utils from "./Utils.js";
 
 
 const DailyReader = () => {
     const [collapseOpen, setCollapseOpen] = React.useState(false);
-    const [books, setBooks] = useState(43)
     const [book, setBook] = useState('')
+    const [bookId, setBookId] = useState('')
     const [testament, setTestamant] = useState('')
     const [title, setTitle] = useState('Reading for today')
     const [colour, setColour] = useState('royalblue')
     const [chapter, setChapter] = useState('')
-    const [chapterId, setChapterId] = useState(1)
-    const [verse, setVerse] = useState('')
+    const [verse, setVerse] = useState('In the beginning God created the heaven and the earth.')
     const [verseId, setVerseId] = useState('')
     const [showButton, setShowButton] = useState(false)
     const [disabled, setDiabled] = useState(true)
 
-    const url = api.BIBLE_API + api.BOOK + books+ api.CHAPTER + chapterId
+
+    const bookService = new Utility()
+
+    const url = api.BIBLE_API + api.BOOK + bookId + api.CHAPTER + chapter
     console.log("bible reading url ====>> " + url)
 
+    // useEffect(() => {
+    //     bookService.getBibleBooks(book)
+    //     .then((data) => {
+    //         set
+    //     })
+    // },[])
+
+    const getBookId = () => {
+
+    }
     
-   
-
-
-    
-    useEffect(() => {
-
-        axios.get(url)
-        .then(handleResponse)
-        .catch((error) => {
-            console.log("error occured " + error.message)
-            let message = error.message === 'Network Error' ? 'Service temporarily unavailable' : error.message
-            return(
-                Swal.fire(
-                    'Error',
-                    message,
-                    'error'
-                )
-            )
-        })
-
-       
-    },[])
-
     const handleResponse = (response) => {
         console.log("bible api response ===> " + response)
         var data = response.data.result
-        console.log("data response ==>" + data)
 
         data.map(reading => {
-            var chapter = reading.chapterId
-            var verseId = reading.verseId
-            var verse = reading.verse
-            var book = reading.book.name
-            var testament = reading.book.testament
-            var bookId = reading.book.id
+            let chapter = reading.chapterId
+            let verseId = reading.verseId
+            let verse = reading.verse
+            let book = reading.book.name
+            let testament = reading.book.testament
+
             setVerse(verse)
             setChapter(chapter)
             setBook(book)
@@ -84,14 +74,10 @@ const DailyReader = () => {
             }else{
                 setTestamant("Old Testament")
             }
-
-            console.log("chapter => " + chapter)
-            console.log("verseId => " + verseId)
-            console.log("verse => " + verse)
-            console.log("book => " + book)
-            console.log("testament => " + testament)
-            console.log("bookId => " + bookId)
         })
+
+        setDiabled(true)
+        setShowButton(false)
 
         
     }
@@ -112,13 +98,14 @@ const DailyReader = () => {
     }
 
     const handleSubmitButton = () => {
-        const url = api.BIBLE_API + api.BOOK + books+ api.CHAPTER + chapterId
-
         axios.get(url)
         .then(handleResponse)
         .catch((error) => {
             console.log("error occured " + error.message)
             let message = error.message === 'Network Error' ? 'Service temporarily unavailable' : error.message
+            setDiabled(true)
+            setShowButton(false)
+
             return(
                 Swal.fire(
                     'Error',
@@ -127,15 +114,6 @@ const DailyReader = () => {
                 )
             )
         })
-
-        Swal.fire(
-            "Your Reading",
-            "God is good all the time",
-            "sucess"
-            )
-
-        setDiabled(true)
-        setShowButton(false)
     }
 
     var button;
@@ -182,7 +160,13 @@ const DailyReader = () => {
                 <Container>
                     <Row>
                         <Col md="12">
-                            <h4 onMouseEnter={handleMouseEnter} onMouseLeave={handleOnMouseLeave} style={{ color:colour }}>{title}</h4>
+                            <h4 onMouseEnter={handleMouseEnter} 
+                            onMouseLeave={handleOnMouseLeave} 
+                            style={{ color:colour }} 
+                            class="text-3xl font-serif font-bold">
+                                {title}
+                            </h4>
+                            <br/>
                             <Navbar className="bg-info" expand="lg">
                                 <Container>
                                 <Collapse isOpen={collapseOpen} navbar>
@@ -190,55 +174,59 @@ const DailyReader = () => {
 
                                         <Col lg="3" sm="3">
                                             <FormGroup>
-                                            <label style={{ color: "white" }}><b><i>Testatment</i></b></label>
+                                            <label class="text-white font-mono text-lg" ><b><i>Testatment</i></b></label>
                                             <Input
                                                 defaultValue={testament}
                                                 placeholder="Testament"
                                                 type="text"
-                                                style={{backgroundColor:"white" }}
-                                                disabled={disabled}
+                                                style={{backgroundColor:"white"}}
+                                                disabled
                                             ></Input>
                                             </FormGroup>
                                         </Col>
 
                                         <Col lg="3" sm="3">
                                             <FormGroup>
-                                            <label style={{ color: "white" }}><b><i>Book</i></b></label>
+                                            <label class="text-white font-mono text-lg" ><b><i>Book</i></b></label>
                                             <Input
                                                 defaultValue={book}
                                                 placeholder="Book"
                                                 type="text"
                                                 style={{backgroundColor:"white" }}
                                                 disabled={disabled}
+                                                onChange={(e) => setBook(e.target.value)}
                                             ></Input>
                                             </FormGroup>
                                         </Col>
 
                                         <Col lg="3" sm="3">
                                             <FormGroup>
-                                            <label style={{ color: "white" }}><b><i>Chapter</i></b></label>
+                                            <label class="text-white font-mono text-lg" ><b><i>Chapter</i></b></label>
                                             <Input
                                                 defaultValue={chapter}
                                                 placeholder="Chapter"
                                                 type="text"
                                                 style={{backgroundColor:"white" }}
                                                 disabled={disabled}
+                                                onChange={(e) => setChapter(e.target.value)}
                                             ></Input>
                                             </FormGroup>
                                         </Col>
 
                                         <Col lg="3" sm="3">
                                             <FormGroup>
-                                            <label style={{ color: "white" }}><b><i>Verse</i></b></label>
+                                            <label class="text-white font-mono text-lg" ><b><i>Verse</i></b></label>
                                             <Input
                                                 defaultValue={verseId}
                                                 placeholder="Verse"
                                                 type="text"
                                                 style={{backgroundColor:"white"}}
                                                 disabled={disabled}
+                                                onChange={(e) => setVerseId(e.target.value)}
                                             ></Input>
                                             </FormGroup>
                                         </Col>
+
                                     </Nav>
                                 </Collapse>
                                
@@ -256,13 +244,14 @@ const DailyReader = () => {
                                         role="tablist"
                                         tabs
                                     >
-                                    <h6>Your Bible Reading</h6>
+                                    <h6 class="text-lg font-serif text-sky-50 font-bold">Your Bible Reading</h6>
                                     </Nav>
                                 </CardHeader>
                                 <CardBody>
-                                    <p>
+                                    <p class="text-blue-800 text-lg">
                                         {verse}
                                     </p>
+
                                 </CardBody>
                             </Card>
                         </Col>

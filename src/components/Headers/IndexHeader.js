@@ -33,14 +33,17 @@ function IndexHeader() {
           ref={pageHeader}
         ></div>
         <Container>
-          <div className="content-center brand">
+          <div class="content-center brand">
             <img
               alt="..."
               className="n-logo rounded"
+              class="rounded-full w-60 h-auto max-w-lg mx-auto"
               src={require("assets/img/read1.jpeg")}
             ></img>
             <h1 className="h1-seo">Daily bible Reader</h1>
           </div>
+
+          
         </Container>
       </div>
     </>
