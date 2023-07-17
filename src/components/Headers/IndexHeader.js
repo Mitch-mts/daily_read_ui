@@ -41,6 +41,7 @@ function IndexHeader() {
               src={require("assets/img/read1.jpeg")}
             ></img>
             <h1 className="h1-seo">Daily bible Reader</h1>
+            <img class="w-20 h-20 rounded mx-auto" src={require("assets/img/down1.png")} alt="Large avatar"></img>
           </div>
 
           

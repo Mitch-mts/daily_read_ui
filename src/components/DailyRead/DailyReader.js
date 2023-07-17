@@ -3,6 +3,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import * as api from "./api/ApiConstants.js"
 import { Utility } from "./utility/Utility.js";
+import { BOOK_DATA } from "./utility/BookData.js";
 
 import {
     Card,
@@ -20,41 +21,49 @@ import {
     Col,
   } from "reactstrap";
 import Utils from "./Utils.js";
+import Dropdown from "./Dropdown.js";
 
 
 const DailyReader = () => {
     const [collapseOpen, setCollapseOpen] = React.useState(false);
-    const [book, setBook] = useState('Genesis')
+    const [bookName, setBookName] = useState()
     const [bookId, setBookId] = useState('')
-    const [testament, setTestamant] = useState('Old Testament')
+    const [testament, setTestamant] = useState()
     const [title, setTitle] = useState('Reading for today')
     const [colour, setColour] = useState('royalblue')
-    const [chapter, setChapter] = useState('1')
-    const [verse, setVerse] = useState('In the beginning God created the heaven and the earth.')
-    const [verseId, setVerseId] = useState('1')
-    const [showButton, setShowButton] = useState(false)
+    const [chapter, setChapter] = useState()
+    const [chapterId, setChapterId] = useState()
+    const [verse, setVerse] = useState()
+    const [verseId, setVerseId] = useState()
+    const [showButton, setShowButton] = useState(true)
     const [disabled, setDiabled] = useState(true)
+    const [reading, setReading] = useState()
+    const books = BOOK_DATA.books;
+    const bookList = []
+    const chapterNumbers = []
+    const verseNumbers = []
 
+    var filteredBookByTestament = books.filter(book => book.testament === testament)
+    var filteredBooks = books.filter(name => name.book === bookName);
 
-    const bookService = new Utility()
+    filteredBookByTestament.map(book => {
+        bookList.push(book.book)
 
-    const url = api.BIBLE_API + api.BOOK + bookId + api.CHAPTER + chapter
+        filteredBooks.map(chapter => {
+            for(let i = 1; i <= chapter.chapters; i++){
+                chapterNumbers.push(i)
+            }
+        })
+    })    
+
+    const url = api.BIBLE_API + api.BOOK + bookId + api.CHAPTER + chapterId
     console.log("bible reading url ====>> " + url)
 
-    // useEffect(() => {
-    //     bookService.getBibleBooks(book)
-    //     .then((data) => {
-    //         set
-    //     })
-    // },[])
 
-    const getBookId = () => {
-
-    }
-    
     const handleResponse = (response) => {
         console.log("bible api response ===> " + response)
         var data = response.data.result
+        var verses = []
 
         data.map(reading => {
             let chapter = reading.chapterId
@@ -63,9 +72,11 @@ const DailyReader = () => {
             let book = reading.book.name
             let testament = reading.book.testament
 
-            setVerse(verse)
+            let bibleVerse = verseId + ". " + verse + " "
+            verses.push(bibleVerse)
+            setVerse(verses)
             setChapter(chapter)
-            setBook(book)
+            setBookName(book)
             setVerseId(verseId)
 
          
@@ -74,11 +85,16 @@ const DailyReader = () => {
             }else{
                 setTestamant("Old Testament")
             }
+
+            
         })
 
-        setDiabled(true)
-        setShowButton(false)
+        // setDiabled(true)
+        // setShowButton(false)
 
+        var read = " the book of " + bookName + " chapter " + chapterId
+        console.log("reading is " + read)
+        setReading(read)
         
     }
    
@@ -97,14 +113,33 @@ const DailyReader = () => {
         setShowButton(true)
     }
 
+    const handleVerseChange = (e) => {
+        setVerseId(e.target.value)
+    }
+
+    const handleOnChangeTestament = (e) => {
+        setTestamant(e.target.value)
+    }
+
+    const handleBookNameChange = (e) => {
+        setBookName(e.target.value)
+        let bookId = books.find(book => book.book === e.target.value).id
+        setBookId(bookId)
+    }
+
+    const handleChapterChange = (e) => {
+        setChapterId(e.target.value)
+    }
+
+
     const handleSubmitButton = () => {
         axios.get(url)
         .then(handleResponse)
         .catch((error) => {
             console.log("error occured " + error.message)
             let message = error.message === 'Network Error' ? 'Service temporarily unavailable' : error.message
-            setDiabled(true)
-            setShowButton(false)
+            // setDiabled(true)
+            // setShowButton(false)
 
             return(
                 Swal.fire(
@@ -171,61 +206,71 @@ const DailyReader = () => {
                                 <Container>
                                 <Collapse isOpen={collapseOpen} navbar>
                                     <Nav navbar>
-
-                                        <Col lg="3" sm="3">
+                                        <Col md="4">
                                             <FormGroup>
                                             <label class="text-white font-mono text-lg" ><b><i>Testatment</i></b></label>
-                                            <Input
-                                                defaultValue={testament}
-                                                placeholder="Testament"
-                                                type="text"
-                                                style={{backgroundColor:"white"}}
-                                                disabled
-                                            ></Input>
+                                            
+                                            <select id="small" value={testament} onChange={handleOnChangeTestament} class="block w-full p-2 mb-3 text-sm text-blue-800 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-white dark:border-blue-500 dark:placeholder-gray-400 dark:text-blue-900 dark:focus:ring-blue-900 dark:focus:border-blue-500">
+                                                <option>Select Testament</option>
+                                                <option value="OT">Old Testament</option>
+                                                <option value="NT">New Testament</option>
+                                            </select>
                                             </FormGroup>
                                         </Col>
 
-                                        <Col lg="3" sm="3">
+                                        <Col md="4">
                                             <FormGroup>
                                             <label class="text-white font-mono text-lg" ><b><i>Book</i></b></label>
-                                            <Input
-                                                defaultValue={book}
-                                                placeholder="Book"
-                                                type="text"
-                                                style={{backgroundColor:"white" }}
-                                                disabled={disabled}
-                                                onChange={(e) => setBook(e.target.value)}
-                                            ></Input>
+                                            <select id="small" value={bookName} onChange={handleBookNameChange} class="block w-full p-2 mb-3 text-sm text-blue-800 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-white dark:border-blue-500 dark:placeholder-gray-400 dark:text-blue-900 dark:focus:ring-blue-900 dark:focus:border-blue-500">
+                                                {bookList.map(book => {
+                                                    return (
+                                                        <>
+                                                            <option value={book}>
+                                                                {book}
+                                                            </option>
+                                                        </>
+                                                        
+                                                        );
+                                                })}  
+                                            </select>
                                             </FormGroup>
                                         </Col>
 
-                                        <Col lg="3" sm="3">
+                                        <Col md="4">
                                             <FormGroup>
                                             <label class="text-white font-mono text-lg" ><b><i>Chapter</i></b></label>
-                                            <Input
-                                                defaultValue={chapter}
-                                                placeholder="Chapter"
-                                                type="text"
-                                                style={{backgroundColor:"white" }}
-                                                disabled={disabled}
-                                                onChange={(e) => setChapter(e.target.value)}
-                                            ></Input>
+                                            <select id="small" value={chapterId} onChange={handleChapterChange} class="block w-full p-2 mb-3 text-sm text-blue-800 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-white dark:border-blue-500 dark:placeholder-gray-400 dark:text-blue-900 dark:focus:ring-blue-900 dark:focus:border-blue-500">
+                                                {chapterNumbers.map((number) => {
+                                                    return (
+                                                        <>
+                                                            <option value={number}>
+                                                                {number}
+                                                            </option>
+                                                        </>
+                                                        
+                                                        );
+                                                })}        
+                                            </select>
                                             </FormGroup>
                                         </Col>
 
-                                        <Col lg="3" sm="3">
+                                        {/* <Col lg="4" sm="4">
                                             <FormGroup>
                                             <label class="text-white font-mono text-lg" ><b><i>Verse</i></b></label>
-                                            <Input
-                                                defaultValue={verseId}
-                                                placeholder="Verse"
-                                                type="text"
-                                                style={{backgroundColor:"white"}}
-                                                disabled={disabled}
-                                                onChange={(e) => setVerseId(e.target.value)}
-                                            ></Input>
+                                            <select id="small" value={verseId} onChange={handleVerseChange} class="block w-full p-2 mb-3 text-sm text-blue-800 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-white dark:border-blue-500 dark:placeholder-gray-400 dark:text-blue-900 dark:focus:ring-blue-900 dark:focus:border-blue-500">
+                                                {verseNumbers.map((number) => {
+                                                    return (
+                                                        <>
+                                                            <option value={number}>
+                                                                {number}
+                                                            </option>
+                                                        </>
+                                                        
+                                                        );
+                                                })}        
+                                            </select>
                                             </FormGroup>
-                                        </Col>
+                                        </Col> */}
 
                                     </Nav>
                                 </Collapse>
@@ -236,6 +281,7 @@ const DailyReader = () => {
                             </Navbar>
                         </Col>
                         <Col className="ml-auto mr-auto" md="10" xl="12">
+
                             <Card>
                                 <CardHeader>
                                     <Nav
@@ -244,13 +290,15 @@ const DailyReader = () => {
                                         role="tablist"
                                         tabs
                                     >
-                                    <h6 class="text-lg font-serif text-sky-50 font-bold">Your Bible Reading</h6>
+                                    <h6 class="text-lg font-serif text-sky-50 font-bold">
+                                        Your Bible Reading from {reading}
+                                    </h6>
                                     </Nav>
                                 </CardHeader>
                                 <CardBody>
                                     <p class="text-blue-800 text-lg">
                                         {verse}
-                                    </p>
+                                    </p>                                  
 
                                 </CardBody>
                             </Card>
