@@ -56,7 +56,7 @@ const DailyReader = () => {
         })
     })    
 
-    const url = api.BIBLE_API + api.BOOK + bookId + api.CHAPTER + chapterId
+    const url = api.AWS_API + api.BOOK + bookId + api.CHAPTER + chapterId
     console.log("bible reading url ====>> " + url)
 
 
