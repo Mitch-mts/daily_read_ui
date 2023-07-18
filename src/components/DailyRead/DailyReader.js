@@ -26,7 +26,7 @@ import Dropdown from "./Dropdown.js";
 
 const DailyReader = () => {
     const [collapseOpen, setCollapseOpen] = React.useState(false);
-    const [bookName, setBookName] = useState()
+    const [bookName, setBookName] = useState('Select Book')
     const [bookId, setBookId] = useState('')
     const [testament, setTestamant] = useState()
     const [title, setTitle] = useState('Reading for today')
