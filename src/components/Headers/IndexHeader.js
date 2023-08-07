@@ -1,4 +1,5 @@
 /*eslint-disable*/
+import DailyReader from "components/DailyRead/DailyReader";
 import React from "react";
 
 // reactstrap components
@@ -43,9 +44,9 @@ function IndexHeader() {
             <h1 className="h1-seo">Daily bible Reader</h1>
             <img class="w-20 h-20 rounded mx-auto" src={require("assets/img/down1.png")} alt="Large avatar"></img>
           </div>
-
           
         </Container>
+        
       </div>
     </>
   );

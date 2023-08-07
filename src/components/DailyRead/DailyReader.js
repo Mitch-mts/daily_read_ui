@@ -47,16 +47,16 @@ const DailyReader = () => {
     var filteredBooks = books.filter(name => name.book === bookName);
 
     filteredBookByTestament.map(book => {
-        bookList.push(book.book)
-
-        filteredBooks.map(chapter => {
-            for(let i = 1; i <= chapter.chapters; i++){
-                chapterNumbers.push(i)
-            }
-        })
+        bookList.push(book.book)        
     })    
 
-    const url = api.AWS_API + api.BOOK + bookId + api.CHAPTER + chapterId
+    filteredBooks.map(chapter => {
+        for(let i = 1; i <= chapter.chapters; i++){
+            chapterNumbers.push(i)
+        }
+    })
+
+    const url = api.BIBLE_API + api.BOOK + bookId + api.CHAPTER + chapterId
     console.log("bible reading url ====>> " + url)
 
 
