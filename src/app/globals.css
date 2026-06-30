@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 224 30% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 30% 12%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 20% 96%;
+    --secondary-foreground: 224 30% 20%;
+    --muted: 240 15% 95%;
+    --muted-foreground: 220 10% 46%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 100%;
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 239 84% 67%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 224 30% 8%;
+    --foreground: 210 20% 96%;
+    --card: 224 28% 11%;
+    --card-foreground: 210 20% 96%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 224 25% 15%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 224 25% 15%;
+    --muted-foreground: 215 15% 60%;
+    --accent: 38 92% 55%;
+    --accent-foreground: 224 30% 8%;
+    --border: 224 20% 18%;
+    --input: 224 20% 18%;
+    --ring: 239 84% 67%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply border border-white/20 bg-white/70 shadow-glass backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
+  }
+
+  .glass-dark {
+    @apply border border-white/10 bg-slate-900/60 shadow-glass backdrop-blur-xl;
+  }
+
+  .verse-line {
+    @apply mb-4 pl-9 indent-[-2rem] leading-[2] tracking-wide;
+  }
+
+  .verse-num {
+    @apply mr-2 inline-block min-w-[1.75rem] text-center text-xs font-semibold tabular-nums text-primary;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent;
+  }
+
+  .premium-card {
+    @apply rounded-2xl border border-border/60 bg-card shadow-soft transition-shadow duration-300 hover:shadow-glow;
+  }
+}
+
+@layer utilities {
+  .reading-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.4) transparent;
+  }
+
+  .reading-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .reading-scroll::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-primary/30;
+  }
+}
