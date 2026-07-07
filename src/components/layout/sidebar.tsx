@@ -66,30 +66,38 @@ export function Sidebar({ journey, progressPercent, onNavClick, className }: Sid
             transition={{ delay: index * 0.04 }}
           >
             <a
-              href={item.href}
-              onClick={() => onNavClick?.(item.href)}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-primary/5 hover:text-primary"
+              href={item.comingSoon ? undefined : item.href}
+              aria-disabled={item.comingSoon}
+              onClick={(event) => {
+                if (item.comingSoon) {
+                  event.preventDefault();
+                  return;
+                }
+                onNavClick?.(item.href);
+              }}
+              className={cn(
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
+                item.comingSoon
+                  ? "cursor-not-allowed text-muted-foreground/70 hover:bg-muted/40"
+                  : "text-muted-foreground hover:bg-primary/5 hover:text-primary",
+              )}
             >
-              <item.icon className="h-4 w-4" />
-              {item.label}
+              <item.icon className="h-4 w-4 shrink-0" />
+              <span className="flex-1">{item.label}</span>
+              {item.comingSoon && (
+                <Badge
+                  variant="gold"
+                  className="pointer-events-none whitespace-nowrap scale-95 opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100"
+                >
+                  Coming soon
+                </Badge>
+              )}
             </a>
           </motion.div>
         ))}
       </nav>
 
       <div className="space-y-3 border-t border-border/60 p-4">
-        <Card className="border-primary/10 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent">
-          <CardContent className="p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <Flame className="h-4 w-4 text-amber-500" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Streak
-              </span>
-            </div>
-            <p className="font-display text-2xl font-bold">{journey.streak} days</p>
-            <p className="mt-1 text-xs text-muted-foreground">Keep the flame alive</p>
-          </CardContent>
-        </Card>
 
         <Card className="glass border-white/20">
           <CardContent className="p-4">
@@ -106,23 +114,7 @@ export function Sidebar({ journey, progressPercent, onNavClick, className }: Sid
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-primary" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Progress
-                </span>
-              </div>
-              <Badge variant="gold">{progressPercent}%</Badge>
-            </div>
-            <Progress value={progressPercent} className="h-1.5" />
-            <p className="mt-2 text-xs text-muted-foreground">
-              {journey.chaptersReadWeek} chapters this week
-            </p>
-          </CardContent>
-        </Card>
+    
 
         <Button
           variant="outline"

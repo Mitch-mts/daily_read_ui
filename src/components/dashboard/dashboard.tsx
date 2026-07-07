@@ -6,6 +6,7 @@ import { BibleReader } from "@/components/dashboard/bible-reader";
 import { FavoritesModal } from "@/components/dashboard/favorites-modal";
 import { HeroSection } from "@/components/dashboard/hero-section";
 import { InspirationCard } from "@/components/dashboard/inspiration-card";
+import { NamePromptModal } from "@/components/dashboard/name-prompt-modal";
 import { PrayerCard } from "@/components/dashboard/prayer-card";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { ReadingJourneyCard } from "@/components/dashboard/reading-journey-card";
@@ -16,11 +17,13 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { TopNavbar } from "@/components/layout/top-navbar";
 import { useGreeting, useDateLabel } from "@/hooks/useGreeting";
 import { useReadingSession } from "@/hooks/useReadingSession";
+import { useUserName } from "@/hooks/useUserName";
 import { cn } from "@/lib/utils";
 
 export function Dashboard() {
   const session = useReadingSession();
-  const greeting = useGreeting();
+  const { name, needsName, saveName } = useUserName();
+  const greeting = useGreeting(name);
   const dateLabel = useDateLabel();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -143,14 +146,7 @@ export function Dashboard() {
             </div>
 
             <div id="favorites" className="space-y-6">
-              <ReadingJourneyCard
-                journey={session.journey}
-                booksReadCount={session.booksReadCount}
-                verseCount={session.verseCount}
-                progressPercent={session.progressPercent}
-              />
               <InspirationCard />
-              <ReflectionCard />
               <PrayerCard />
             </div>
           </div>
@@ -185,6 +181,8 @@ export function Dashboard() {
           onClose={() => session.setModal(null)}
         />
       )}
+
+      {needsName && <NamePromptModal onSubmit={saveName} />}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Bookmark,
   ChevronLeft,
@@ -17,6 +18,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const VERSES_PER_PAGE = 5;
+
 function fontSizeClass(mode: ReadingMode): string {
   if (mode === "large") return "text-xl md:text-2xl";
   if (mode === "extra-large") return "text-2xl md:text-3xl";
@@ -25,8 +28,8 @@ function fontSizeClass(mode: ReadingMode): string {
 
 function ReadingSkeleton() {
   return (
-    <div className="mx-auto max-w-2xl space-y-4 py-6">
-      {Array.from({ length: 10 }, (_, i) => (
+    <div className="mx-auto w-full max-w-2xl space-y-4 py-6">
+      {Array.from({ length: VERSES_PER_PAGE }, (_, i) => (
         <Skeleton key={i} className="h-5" style={{ width: `${60 + (i % 3) * 12}%` }} />
       ))}
     </div>
@@ -41,7 +44,7 @@ function VerseText({
   mode: ReadingMode;
 }) {
   return (
-    <article className={`mx-auto max-w-2xl font-scripture ${fontSizeClass(mode)}`}>
+    <article className={`mx-auto w-full max-w-2xl font-scripture ${fontSizeClass(mode)}`}>
       {verses.map((entry) => (
         <p key={entry.verseId} className="verse-line">
           <sup className="verse-num">{entry.verseId}</sup>
@@ -93,11 +96,59 @@ export function BibleReader({
   onBookmark,
   onClear,
   onAudio,
-  chapterProgress = 0,
 }: BibleReaderProps) {
+  const [page, setPage] = useState(0);
+
+  // Reset to the first page whenever a new passage loads.
+  useEffect(() => {
+    setPage(0);
+  }, [verses]);
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil((verses?.length ?? 0) / VERSES_PER_PAGE)),
+    [verses],
+  );
+
+  const safePage = Math.min(page, totalPages - 1);
+
+  const pageVerses = useMemo(() => {
+    if (!verses) return [];
+    const start = safePage * VERSES_PER_PAGE;
+    return verses.slice(start, start + VERSES_PER_PAGE);
+  }, [verses, safePage]);
+
   if (!isLoading && !verses) return null;
 
-  const readProgress = verses ? chapterProgress : 0;
+  const isFirstPage = safePage === 0;
+  const isLastPage = safePage >= totalPages - 1;
+
+  const firstVerseNo = pageVerses[0]?.verseId;
+  const lastVerseNo = pageVerses[pageVerses.length - 1]?.verseId;
+
+  const pageProgress = verses
+    ? Math.round(((safePage + 1) / totalPages) * 100)
+    : 0;
+
+  const handlePrev = () => {
+    if (!isFirstPage) {
+      setPage(safePage - 1);
+    } else if (canGoPrev) {
+      onPrev();
+    }
+  };
+
+  const handleNext = () => {
+    if (!isLastPage) {
+      setPage(safePage + 1);
+    } else if (canGoNext) {
+      onNext();
+    }
+  };
+
+  const prevDisabled = isLoading || (isFirstPage && !canGoPrev);
+  const nextDisabled = isLoading || (isLastPage && !canGoNext);
+  const prevLabel = isFirstPage ? "Prev chapter" : "Previous";
+  const nextLabel = isLastPage ? "Next chapter" : "Next";
 
   return (
     <motion.section
@@ -106,8 +157,8 @@ export function BibleReader({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Card className="overflow-hidden shadow-soft">
-        <CardHeader className="sticky top-0 z-10 border-b border-border/60 bg-card/95 backdrop-blur-xl">
+      <Card className="mx-auto max-w-3xl overflow-hidden shadow-soft">
+        <CardHeader className="border-b border-border/60 bg-card/95">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle className="font-display text-2xl">
@@ -115,7 +166,11 @@ export function BibleReader({
                 {chapterId !== "" ? ` ${chapterId}` : ""}
               </CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                {verseCount > 0 ? `${verseCount} verses` : "Loading scripture…"}
+                {verseCount > 0
+                  ? firstVerseNo === lastVerseNo
+                    ? `Verse ${firstVerseNo} of ${verseCount}`
+                    : `Verses ${firstVerseNo}–${lastVerseNo} of ${verseCount}`
+                  : "Loading scripture…"}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-1">
@@ -143,44 +198,59 @@ export function BibleReader({
           <div className="mt-4">
             <div className="mb-2 flex justify-between text-xs text-muted-foreground">
               <span>Reading progress</span>
-              <span>{readProgress}%</span>
+              <span>
+                Page {safePage + 1} of {totalPages}
+              </span>
             </div>
-            <Progress value={readProgress} className="h-1" />
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onPrev}
-              disabled={!canGoPrev || isLoading}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Ch. {chapterId !== "" ? chapterId : "—"}
-              {currentBookChapters ? ` of ${currentBookChapters}` : ""}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onNext}
-              disabled={!canGoNext || isLoading}
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            <Progress value={pageProgress} className="h-1" />
           </div>
         </CardHeader>
 
-        <CardContent className="reading-scroll max-h-[65vh] overflow-y-auto p-6 md:p-10">
+        <CardContent className="reading-scroll flex min-h-[340px] max-h-[52vh] items-start overflow-y-auto p-6 md:p-10">
           {isLoading ? (
             <ReadingSkeleton />
-          ) : verses ? (
-            <VerseText verses={verses} mode={readingMode} />
-          ) : null}
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={safePage}
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.2 }}
+                className="w-full"
+              >
+                <VerseText verses={pageVerses} mode={readingMode} />
+              </motion.div>
+            </AnimatePresence>
+          )}
         </CardContent>
+
+        <div className="flex items-center justify-between border-t border-border/60 bg-card/95 p-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrev}
+            disabled={prevDisabled}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            {prevLabel}
+          </Button>
+
+          <span className="text-sm text-muted-foreground">
+            {chapterId !== "" ? `Ch. ${chapterId}` : ""}
+            {currentBookChapters ? ` of ${currentBookChapters}` : ""}
+          </span>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNext}
+            disabled={nextDisabled}
+          >
+            {nextLabel}
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </Card>
     </motion.section>
   );

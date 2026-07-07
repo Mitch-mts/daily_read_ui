@@ -2,12 +2,13 @@
 
 import { useMemo } from "react";
 
-export function useGreeting(name = "Mitch") {
+export function useGreeting(name?: string | null) {
   return useMemo(() => {
     const hour = new Date().getHours();
     const period =
       hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-    return `${period}, ${name} 👋`;
+    const trimmed = name?.trim();
+    return `${period}, ${trimmed || "Friend"} 👋`;
   }, [name]);
 }
 
