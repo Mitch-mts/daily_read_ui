@@ -52,7 +52,9 @@ export function FavoritesModal({
                       onClick={() => onOpen(favorite)}
                       className="text-left font-semibold text-primary hover:underline"
                     >
-                      {favorite.book} Chapter {favorite.chapter}
+                      {favorite.verseId !== undefined
+                        ? `${favorite.book} ${favorite.chapter}:${favorite.verseId}`
+                        : `${favorite.book} Chapter ${favorite.chapter}`}
                     </button>
                     <button
                       type="button"

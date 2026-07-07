@@ -36,6 +36,7 @@ export function Dashboard() {
     session.setBookName(name || "Select Book");
     session.setBookId(book?.id ?? "");
     session.setChapterId("");
+    session.setVerseId("");
   };
 
   const chapterProgress =
@@ -98,6 +99,10 @@ export function Dashboard() {
             setBookId={session.setBookId}
             chapterId={session.chapterId}
             setChapterId={session.setChapterId}
+            verseId={session.verseId}
+            setVerseId={session.setVerseId}
+            readSingleVerse={session.readSingleVerse}
+            setReadSingleVerse={session.setReadSingleVerse}
             bookList={session.bookList}
             chapterNumbers={session.chapterNumbers}
             isLoading={session.isLoading}
@@ -115,6 +120,7 @@ export function Dashboard() {
                 panelRef={session.readingPanelRef}
                 bookName={session.bookName}
                 chapterId={session.chapterId}
+                activeVerseId={session.activeVerseId}
                 currentBookChapters={session.currentBook?.chapters}
                 verses={session.verses}
                 isLoading={session.isLoading}

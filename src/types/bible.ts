@@ -48,6 +48,8 @@ export interface FavoriteVerse {
   verse: string[];
   book: string;
   chapter: number;
+  /** Present when a single verse was saved rather than a whole chapter. */
+  verseId?: number;
   date: string;
 }
 

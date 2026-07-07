@@ -59,6 +59,7 @@ interface BibleReaderProps {
   panelRef: React.RefObject<HTMLElement | null>;
   bookName: string;
   chapterId: number | "";
+  activeVerseId?: number | null;
   currentBookChapters?: number;
   verses: ParsedVerse[] | null;
   isLoading: boolean;
@@ -81,6 +82,7 @@ export function BibleReader({
   panelRef,
   bookName,
   chapterId,
+  activeVerseId,
   currentBookChapters,
   verses,
   isLoading,
@@ -145,10 +147,20 @@ export function BibleReader({
     }
   };
 
+  const isSingleVerse = activeVerseId != null;
+
   const prevDisabled = isLoading || (isFirstPage && !canGoPrev);
   const nextDisabled = isLoading || (isLastPage && !canGoNext);
-  const prevLabel = isFirstPage ? "Prev chapter" : "Previous";
-  const nextLabel = isLastPage ? "Next chapter" : "Next";
+  const prevLabel = isSingleVerse
+    ? "Prev verse"
+    : isFirstPage
+      ? "Prev chapter"
+      : "Previous";
+  const nextLabel = isSingleVerse
+    ? "Next verse"
+    : isLastPage
+      ? "Next chapter"
+      : "Next";
 
   return (
     <motion.section
@@ -164,13 +176,16 @@ export function BibleReader({
               <CardTitle className="font-display text-2xl">
                 {bookName}
                 {chapterId !== "" ? ` ${chapterId}` : ""}
+                {isSingleVerse ? `:${activeVerseId}` : ""}
               </CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                {verseCount > 0
-                  ? firstVerseNo === lastVerseNo
-                    ? `Verse ${firstVerseNo} of ${verseCount}`
-                    : `Verses ${firstVerseNo}–${lastVerseNo} of ${verseCount}`
-                  : "Loading scripture…"}
+                {isSingleVerse
+                  ? "Single verse"
+                  : verseCount > 0
+                    ? firstVerseNo === lastVerseNo
+                      ? `Verse ${firstVerseNo} of ${verseCount}`
+                      : `Verses ${firstVerseNo}–${lastVerseNo} of ${verseCount}`
+                    : "Loading scripture…"}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-1">
@@ -237,8 +252,11 @@ export function BibleReader({
           </Button>
 
           <span className="text-sm text-muted-foreground">
-            {chapterId !== "" ? `Ch. ${chapterId}` : ""}
-            {currentBookChapters ? ` of ${currentBookChapters}` : ""}
+            {isSingleVerse
+              ? `Verse ${activeVerseId}`
+              : `${chapterId !== "" ? `Ch. ${chapterId}` : ""}${
+                  currentBookChapters ? ` of ${currentBookChapters}` : ""
+                }`}
           </span>
 
           <Button

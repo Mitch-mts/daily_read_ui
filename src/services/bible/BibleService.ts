@@ -40,6 +40,7 @@ export class BibleService {
   static async getChapter(
     bookIdParam: string,
     chapterIdParam: string,
+    verseParam?: string | null,
   ): Promise<ChapterResponse> {
     const bookId = parsePositiveInt(bookIdParam, "bookId");
     const chapterId = parsePositiveInt(chapterIdParam, "chapterId");
@@ -51,11 +52,20 @@ export class BibleService {
       );
     }
 
+    const verse =
+      verseParam != null && verseParam !== ""
+        ? parsePositiveInt(verseParam, "verse")
+        : undefined;
+
     const slug = toApiSlug(book.book);
+    const reference =
+      verse !== undefined
+        ? `${slug} ${chapterId}:${verse}`
+        : `${slug} ${chapterId}`;
     const query = env.bibleTranslation
       ? `?translation=${encodeURIComponent(env.bibleTranslation)}`
       : "";
-    const url = `${env.bibleApiBaseUrl}/${encodeURIComponent(`${slug} ${chapterId}`)}${query}`;
+    const url = `${env.bibleApiBaseUrl}/${encodeURIComponent(reference)}${query}`;
 
     let response: Response;
     try {
@@ -76,7 +86,9 @@ export class BibleService {
 
     if (!payload.verses?.length) {
       throw new NotFoundError(
-        `No verses found for ${book.book} chapter ${chapterId}`,
+        verse !== undefined
+          ? `No verse found for ${book.book} ${chapterId}:${verse}`
+          : `No verses found for ${book.book} chapter ${chapterId}`,
       );
     }
 

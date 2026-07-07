@@ -8,14 +8,16 @@ interface RouteContext {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   context: RouteContext,
 ): Promise<Response> {
   try {
     const { bookId, chapterId } = await context.params;
+    const verse = request.nextUrl.searchParams.get("verse");
     const chapter: ChapterResponse = await BibleService.getChapter(
       bookId,
       chapterId,
+      verse,
     );
     return jsonSuccess(chapter);
   } catch (error) {

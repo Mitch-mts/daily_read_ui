@@ -4,7 +4,11 @@ import { useCallback, useState } from "react";
 import type { ApiErrorResponse, ChapterResponse } from "@/types/bible";
 
 interface UseBibleChapterResult {
-  fetchChapter: (bookId: number, chapterId: number) => Promise<ChapterResponse>;
+  fetchChapter: (
+    bookId: number,
+    chapterId: number,
+    verse?: number,
+  ) => Promise<ChapterResponse>;
   isLoading: boolean;
   error: string | null;
 }
@@ -14,13 +18,18 @@ export function useBibleChapter(): UseBibleChapterResult {
   const [error, setError] = useState<string | null>(null);
 
   const fetchChapter = useCallback(
-    async (bookId: number, chapterId: number): Promise<ChapterResponse> => {
+    async (
+      bookId: number,
+      chapterId: number,
+      verse?: number,
+    ): Promise<ChapterResponse> => {
       setIsLoading(true);
       setError(null);
 
       try {
+        const query = verse ? `?verse=${verse}` : "";
         const response = await fetch(
-          `/api/bible/book/${bookId}/chapter/${chapterId}`,
+          `/api/bible/book/${bookId}/chapter/${chapterId}${query}`,
         );
 
         if (!response.ok) {

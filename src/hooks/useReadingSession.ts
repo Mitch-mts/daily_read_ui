@@ -39,6 +39,9 @@ export function useReadingSession() {
   const [bookName, setBookName] = useState("Select Book");
   const [bookId, setBookId] = useState<number | "">("");
   const [chapterId, setChapterId] = useState<number | "">("");
+  const [verseId, setVerseId] = useState<number | "">("");
+  const [readSingleVerse, setReadSingleVerse] = useState(false);
+  const [activeVerseId, setActiveVerseId] = useState<number | null>(null);
   const [verses, setVerses] = useState<ParsedVerse[] | null>(null);
   const [favoriteVerses, setFavoriteVerses] = useState<FavoriteVerse[]>([]);
   const [expandedFavoriteId, setExpandedFavoriteId] = useState<number | null>(null);
@@ -66,11 +69,23 @@ export function useReadingSession() {
     return Array.from({ length: currentBook.chapters }, (_, i) => i + 1);
   }, [currentBook]);
 
-  const canGoPrev = chapterId !== "" && chapterId > 1;
+  const canGoPrev =
+    activeVerseId !== null
+      ? activeVerseId > 1
+      : chapterId !== "" && chapterId > 1;
   const canGoNext =
-    chapterId !== "" &&
-    currentBook !== undefined &&
-    chapterId < currentBook.chapters;
+    activeVerseId !== null
+      ? true
+      : chapterId !== "" &&
+        currentBook !== undefined &&
+        chapterId < currentBook.chapters;
+
+  const passageReference = useMemo(() => {
+    if (bookName === "Select Book" || chapterId === "") return "";
+    return activeVerseId !== null
+      ? `${bookName} ${chapterId}:${activeVerseId}`
+      : `${bookName} ${chapterId}`;
+  }, [activeVerseId, bookName, chapterId]);
 
   const isReading = verses !== null || isLoading;
   const verseCount = verses?.length ?? 0;
@@ -109,6 +124,7 @@ export function useReadingSession() {
       selectedBookId: number,
       selectedBookName: string,
       selectedTestament: Testament | "",
+      selectedVerse: number | null,
     ) => {
       const parsed = data.result.map((entry) => ({
         verseId: entry.verseId,
@@ -116,6 +132,7 @@ export function useReadingSession() {
       }));
       setVerses(parsed);
       setChapterId(selectedChapterId);
+      setActiveVerseId(selectedVerse);
       setJourney(recordChapterRead());
       setHasLastReading(true);
       localStorage.setItem(
@@ -124,11 +141,14 @@ export function useReadingSession() {
           bookId: selectedBookId,
           bookName: selectedBookName,
           chapterId: selectedChapterId,
+          verseId: selectedVerse,
           testamentFilter: selectedTestament,
         }),
       );
       setLiveMessage(
-        `Loaded ${selectedBookName} chapter ${selectedChapterId}, ${parsed.length} verses.`,
+        selectedVerse !== null
+          ? `Loaded ${selectedBookName} ${selectedChapterId}:${selectedVerse}.`
+          : `Loaded ${selectedBookName} chapter ${selectedChapterId}, ${parsed.length} verses.`,
       );
     },
     [],
@@ -139,20 +159,30 @@ export function useReadingSession() {
       selectedBookId: number,
       selectedChapterId: number,
       selectedBookName: string,
+      selectedVerse?: number,
     ) => {
       setVerses(null);
-      setLiveMessage(`Loading ${selectedBookName} chapter ${selectedChapterId}…`);
+      setLiveMessage(
+        selectedVerse !== undefined
+          ? `Loading ${selectedBookName} ${selectedChapterId}:${selectedVerse}…`
+          : `Loading ${selectedBookName} chapter ${selectedChapterId}…`,
+      );
 
       const book = BOOKS.find((b) => b.id === selectedBookId);
 
       try {
-        const data = await fetchChapter(selectedBookId, selectedChapterId);
+        const data = await fetchChapter(
+          selectedBookId,
+          selectedChapterId,
+          selectedVerse,
+        );
         applyChapterResponse(
           data,
           selectedChapterId,
           selectedBookId,
           selectedBookName,
           book?.testament ?? testamentFilter,
+          selectedVerse ?? null,
         );
         readingPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       } catch (err) {
@@ -174,8 +204,21 @@ export function useReadingSession() {
       });
       return;
     }
-    void loadChapter(bookId, chapterId, bookName);
-  }, [bookId, bookName, chapterId, loadChapter, showToast]);
+    if (readSingleVerse && verseId === "") {
+      showToast({
+        title: "Verse required",
+        message: "Enter a verse number to read a single verse.",
+        variant: "info",
+      });
+      return;
+    }
+    void loadChapter(
+      bookId,
+      chapterId,
+      bookName,
+      readSingleVerse ? (verseId as number) : undefined,
+    );
+  }, [bookId, bookName, chapterId, loadChapter, readSingleVerse, showToast, verseId]);
 
   const handleContinueReading = useCallback(() => {
     try {
@@ -188,13 +231,18 @@ export function useReadingSession() {
         bookId: number;
         bookName: string;
         chapterId: number;
+        verseId?: number | null;
         testamentFilter: Testament;
       };
+      const lastVerse =
+        typeof last.verseId === "number" ? last.verseId : undefined;
       setBookId(last.bookId);
       setBookName(last.bookName);
       setChapterId(last.chapterId);
       setTestamentFilter(last.testamentFilter);
-      void loadChapter(last.bookId, last.chapterId, last.bookName);
+      setReadSingleVerse(lastVerse !== undefined);
+      setVerseId(lastVerse ?? "");
+      void loadChapter(last.bookId, last.chapterId, last.bookName, lastVerse);
     } catch {
       showToast({ title: "Error", message: "Could not restore last reading.", variant: "error" });
     }
@@ -202,13 +250,21 @@ export function useReadingSession() {
 
   const handlePrevChapter = useCallback(() => {
     if (bookId === "" || !canGoPrev || typeof chapterId !== "number") return;
+    if (activeVerseId !== null) {
+      void loadChapter(bookId, chapterId, bookName, activeVerseId - 1);
+      return;
+    }
     void loadChapter(bookId, chapterId - 1, bookName);
-  }, [bookId, bookName, canGoPrev, chapterId, loadChapter]);
+  }, [activeVerseId, bookId, bookName, canGoPrev, chapterId, loadChapter]);
 
   const handleNextChapter = useCallback(() => {
     if (bookId === "" || !canGoNext || typeof chapterId !== "number") return;
+    if (activeVerseId !== null) {
+      void loadChapter(bookId, chapterId, bookName, activeVerseId + 1);
+      return;
+    }
     void loadChapter(bookId, chapterId + 1, bookName);
-  }, [bookId, bookName, canGoNext, chapterId, loadChapter]);
+  }, [activeVerseId, bookId, bookName, canGoNext, chapterId, loadChapter]);
 
   const handleRandomVerse = useCallback(() => {
     const randomBook = BOOKS[Math.floor(Math.random() * BOOKS.length)];
@@ -218,6 +274,8 @@ export function useReadingSession() {
     setBookId(randomBook.id);
     setChapterId(randomChapter);
     setTestamentFilter(randomBook.testament);
+    setReadSingleVerse(false);
+    setVerseId("");
 
     showToast({
       title: "Random selection",
@@ -255,11 +313,21 @@ export function useReadingSession() {
     if (!verses || bookName === "Select Book" || chapterId === "") return;
 
     const alreadySaved = favoriteVerses.some(
-      (f) => f.book === bookName && f.chapter === chapterId,
+      (f) =>
+        f.book === bookName &&
+        f.chapter === chapterId &&
+        (f.verseId ?? null) === activeVerseId,
     );
 
     if (alreadySaved) {
-      showToast({ title: "Already saved", message: "This chapter is in your favorites.", variant: "info" });
+      showToast({
+        title: "Already saved",
+        message:
+          activeVerseId !== null
+            ? "This verse is in your favorites."
+            : "This chapter is in your favorites.",
+        variant: "info",
+      });
       return;
     }
 
@@ -270,14 +338,22 @@ export function useReadingSession() {
         verse: verses.map((e) => `${e.verseId}. ${e.verse}`),
         book: bookName,
         chapter: chapterId as number,
+        verseId: activeVerseId ?? undefined,
         date: new Date().toLocaleDateString(),
       },
     ];
 
     setFavoriteVerses(next);
     saveFavorites(next);
-    showToast({ title: "Bookmarked", message: "Chapter saved to favorites.", variant: "success" });
-  }, [bookName, chapterId, favoriteVerses, showToast, verses]);
+    showToast({
+      title: "Bookmarked",
+      message:
+        activeVerseId !== null
+          ? "Verse saved to favorites."
+          : "Chapter saved to favorites.",
+      variant: "success",
+    });
+  }, [activeVerseId, bookName, chapterId, favoriteVerses, showToast, verses]);
 
   const removeFavorite = useCallback((id: number) => {
     const next = favoriteVerses.filter((f) => f.id !== id);
@@ -293,8 +369,10 @@ export function useReadingSession() {
       setTestamentFilter(book.testament);
       setBookName(book.book);
       setBookId(book.id);
+      setReadSingleVerse(favorite.verseId !== undefined);
+      setVerseId(favorite.verseId ?? "");
       setModal(null);
-      void loadChapter(book.id, favorite.chapter, book.book);
+      void loadChapter(book.id, favorite.chapter, book.book, favorite.verseId);
     },
     [loadChapter],
   );
@@ -320,14 +398,17 @@ export function useReadingSession() {
   const handleCopyChapter = useCallback(async () => {
     if (!verses || bookName === "Select Book" || chapterId === "") return;
     const text = verses.map((e) => `${e.verseId}. ${e.verse}`).join("\n");
-    const reference = `${bookName} ${chapterId}`;
+    const reference =
+      activeVerseId !== null
+        ? `${bookName} ${chapterId}:${activeVerseId}`
+        : `${bookName} ${chapterId}`;
     try {
       await navigator.clipboard.writeText(`${reference}\n\n${text}`);
       showToast({ title: "Copied", message: `${reference} copied.`, variant: "success" });
     } catch {
       showToast({ title: "Copy failed", message: "Unable to copy.", variant: "error" });
     }
-  }, [bookName, chapterId, showToast, verses]);
+  }, [activeVerseId, bookName, chapterId, showToast, verses]);
 
   const showComingSoon = useCallback((feature: string) => {
     setModal({
@@ -370,6 +451,12 @@ export function useReadingSession() {
     setBookId,
     chapterId,
     setChapterId,
+    verseId,
+    setVerseId,
+    readSingleVerse,
+    setReadSingleVerse,
+    activeVerseId,
+    passageReference,
     verses,
     favoriteVerses,
     expandedFavoriteId,
