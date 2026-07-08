@@ -141,7 +141,8 @@ export function Dashboard() {
                   onFavoriteVerse={session.addVerseToFavorites}
                   isVerseFavorited={session.isVerseFavorited}
                   onClear={session.handleClearReading}
-                  onAudio={() => session.showComingSoon("Audio Bible")}
+                  onAudio={session.handleAudioPlayback}
+                  isAudioPlaying={session.isAudioPlaying}
                   chapterProgress={chapterProgress}
                 />
 

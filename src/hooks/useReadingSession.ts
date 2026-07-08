@@ -47,6 +47,8 @@ const READING_MODES: ReadingMode[] = ["normal", "large", "extra-large"];
 export function useReadingSession() {
   const { fetchChapter, isLoading } = useBibleChapter();
   const readingPanelRef = useRef<HTMLElement>(null);
+  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const spokenPassageRef = useRef<string | null>(null);
 
   const [testamentFilter, setTestamentFilter] = useState<Testament | "">("");
   const [bookName, setBookName] = useState("Select Book");
@@ -68,6 +70,7 @@ export function useReadingSession() {
   const [readingHistory, setReadingHistory] = useState<ReadingHistoryEntry[]>([]);
   const [notes, setNotes] = useState<ReadingNote[]>([]);
   const [planProgress, setPlanProgress] = useState<PlanProgress[]>([]);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   const currentBook = useMemo(
     () => BOOKS.find((entry) => entry.id === bookId),
@@ -549,6 +552,73 @@ export function useReadingSession() {
     });
   }, []);
 
+  const handleAudioPlayback = useCallback(() => {
+    if (!verses || bookName === "Select Book" || chapterId === "") {
+      showToast({
+        title: "No passage open",
+        message: "Open a chapter or verse before using audio.",
+        variant: "info",
+      });
+      return;
+    }
+
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      showToast({
+        title: "Audio unavailable",
+        message: "Your browser does not support built-in voice playback.",
+        variant: "error",
+      });
+      return;
+    }
+
+    const synth = window.speechSynthesis;
+
+    if (synth.speaking || synth.pending) {
+      synth.cancel();
+      speechRef.current = null;
+      spokenPassageRef.current = null;
+      setIsAudioPlaying(false);
+      showToast({
+        title: "Audio stopped",
+        message: "Voice playback has been stopped.",
+        variant: "info",
+      });
+      return;
+    }
+
+    const reference =
+      activeVerseId !== null
+        ? `${bookName} chapter ${chapterId} verse ${activeVerseId}`
+        : `${bookName} chapter ${chapterId}`;
+    const spokenText = verses.map((entry) => `Verse ${entry.verseId}. ${entry.verse}`).join(" ");
+    const utterance = new SpeechSynthesisUtterance(`${reference}. ${spokenText}`);
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    utterance.onstart = () => {
+      spokenPassageRef.current = passageReference;
+      setIsAudioPlaying(true);
+    };
+    utterance.onend = () => {
+      speechRef.current = null;
+      spokenPassageRef.current = null;
+      setIsAudioPlaying(false);
+    };
+    utterance.onerror = () => {
+      speechRef.current = null;
+      spokenPassageRef.current = null;
+      setIsAudioPlaying(false);
+      showToast({
+        title: "Audio error",
+        message: "Voice playback could not be completed.",
+        variant: "error",
+      });
+    };
+
+    speechRef.current = utterance;
+    synth.cancel();
+    synth.speak(utterance);
+  }, [activeVerseId, bookName, chapterId, showToast, verses]);
+
   useEffect(() => {
     if (!isReading) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -570,6 +640,26 @@ export function useReadingSession() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isReading, handleNextChapter, handlePrevChapter]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    return () => {
+      window.speechSynthesis.cancel();
+      speechRef.current = null;
+      spokenPassageRef.current = null;
+      setIsAudioPlaying(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isAudioPlaying) return;
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    if (!spokenPassageRef.current || spokenPassageRef.current === passageReference) return;
+    window.speechSynthesis.cancel();
+    speechRef.current = null;
+    spokenPassageRef.current = null;
+    setIsAudioPlaying(false);
+  }, [isAudioPlaying, passageReference]);
 
   return {
     readingPanelRef,
@@ -604,6 +694,7 @@ export function useReadingSession() {
     readingHistory,
     notes,
     planProgress,
+    isAudioPlaying,
     currentBook,
     bookList,
     chapterNumbers,
@@ -637,6 +728,7 @@ export function useReadingSession() {
     navigateToSection,
     showFavorites,
     handleCopyChapter,
+    handleAudioPlayback,
     showComingSoon,
   };
 }

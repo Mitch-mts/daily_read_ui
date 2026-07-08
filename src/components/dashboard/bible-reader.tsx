@@ -10,6 +10,7 @@ import {
   Minus,
   Plus,
   Share2,
+  Square,
   Volume2,
   X,
 } from "lucide-react";
@@ -103,6 +104,7 @@ interface BibleReaderProps {
   isVerseFavorited?: (verseId: number) => boolean;
   onClear: () => void;
   onAudio: () => void;
+  isAudioPlaying?: boolean;
   chapterProgress?: number;
 }
 
@@ -128,6 +130,7 @@ export function BibleReader({
   isVerseFavorited,
   onClear,
   onAudio,
+  isAudioPlaying = false,
 }: BibleReaderProps) {
   const [page, setPage] = useState(0);
 
@@ -231,8 +234,18 @@ export function BibleReader({
               <Button variant="ghost" size="icon" onClick={onBookmark} aria-label="Bookmark">
                 <Bookmark className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={onAudio} aria-label="Audio">
-                <Volume2 className="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onAudio}
+                aria-label={isAudioPlaying ? "Stop audio" : "Read aloud"}
+                title={isAudioPlaying ? "Stop audio" : "Read aloud"}
+              >
+                {isAudioPlaying ? (
+                  <Square className="h-4 w-4 fill-current" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
               </Button>
               <Button variant="ghost" size="icon" onClick={onClear} aria-label="Close reading">
                 <X className="h-4 w-4" />
