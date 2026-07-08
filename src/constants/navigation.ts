@@ -9,21 +9,23 @@ import {
   Settings,
   Target,
 } from "lucide-react";
+import type { NavSection } from "@/types/dashboard";
+
+export type { NavSection };
 
 export interface NavItem {
   label: string;
-  href: string;
   icon: LucideIcon;
-  comingSoon?: boolean;
+  section: NavSection;
 }
 
 export const MAIN_NAV: NavItem[] = [
-  { label: "Home", href: "#home", icon: Home },
-  { label: "Read Bible", href: "#read", icon: BookOpen },
-  { label: "Reading Plans", href: "#plans", icon: Calendar, comingSoon: true },
-  { label: "Favorites", href: "#favorites", icon: Heart },
-  { label: "Notes", href: "#notes", icon: NotebookPen, comingSoon: true },
-  { label: "History", href: "#history", icon: History, comingSoon: true },
-  { label: "Goals", href: "#goals", icon: Target, comingSoon: true },
-  { label: "Settings", href: "#settings", icon: Settings, comingSoon: true },
+  { label: "Home", icon: Home, section: "home" },
+  { label: "Read Bible", icon: BookOpen, section: "read" },
+  { label: "Reading Plans", icon: Calendar, section: "plans" },
+  { label: "Favorites", icon: Heart, section: "favorites" },
+  { label: "Notes", icon: NotebookPen, section: "notes" },
+  { label: "History", icon: History, section: "history" },
+  { label: "Goals", icon: Target, section: "goals" },
+  { label: "Settings", icon: Settings, section: "settings" },
 ];

@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BOOKS } from "@/constants/books";
 import { loadFavorites, saveFavorites } from "@/lib/favorites";
+import { addHistoryEntry, clearHistory, loadHistory } from "@/lib/history";
+import { addNote, loadNotes, removeNote, updateNote } from "@/lib/notes";
 import { loadJourney, recordChapterRead } from "@/lib/readingJourney";
+import {
+  loadPlanProgress,
+  markPlanDayComplete,
+  startPlan,
+} from "@/lib/readingPlans";
 import { useBibleChapter } from "@/hooks/useBibleChapter";
 import type {
   FavoriteVerse,
@@ -11,6 +18,12 @@ import type {
   ReadingMode,
   Testament,
 } from "@/types/bible";
+import type {
+  NavSection,
+  PlanProgress,
+  ReadingHistoryEntry,
+  ReadingNote,
+} from "@/types/dashboard";
 
 export type ToastVariant = "success" | "error" | "info";
 
@@ -51,6 +64,10 @@ export function useReadingSession() {
   const [modal, setModal] = useState<ModalState | null>(null);
   const [liveMessage, setLiveMessage] = useState("");
   const [hasLastReading, setHasLastReading] = useState(false);
+  const [activeSection, setActiveSection] = useState<NavSection>("home");
+  const [readingHistory, setReadingHistory] = useState<ReadingHistoryEntry[]>([]);
+  const [notes, setNotes] = useState<ReadingNote[]>([]);
+  const [planProgress, setPlanProgress] = useState<PlanProgress[]>([]);
 
   const currentBook = useMemo(
     () => BOOKS.find((entry) => entry.id === bookId),
@@ -104,6 +121,9 @@ export function useReadingSession() {
   useEffect(() => {
     setFavoriteVerses(loadFavorites());
     setJourney(loadJourney());
+    setReadingHistory(loadHistory());
+    setNotes(loadNotes());
+    setPlanProgress(loadPlanProgress());
     try {
       const last = localStorage.getItem("daily-reader-last");
       setHasLastReading(!!last);
@@ -135,6 +155,15 @@ export function useReadingSession() {
       setActiveVerseId(selectedVerse);
       setJourney(recordChapterRead());
       setHasLastReading(true);
+      setReadingHistory(
+        addHistoryEntry({
+          bookId: selectedBookId,
+          bookName: selectedBookName,
+          chapterId: selectedChapterId,
+          verseId: selectedVerse ?? undefined,
+          testamentFilter: (selectedTestament || "OT") as Testament,
+        }),
+      );
       localStorage.setItem(
         "daily-reader-last",
         JSON.stringify({
@@ -309,51 +338,92 @@ export function useReadingSession() {
     });
   }, []);
 
+  const saveFavorite = useCallback(
+    (
+      book: string,
+      chapter: number,
+      verseLines: string[],
+      verseId: number | null,
+    ) => {
+      const alreadySaved = favoriteVerses.some(
+        (f) =>
+          f.book === book &&
+          f.chapter === chapter &&
+          (f.verseId ?? null) === verseId,
+      );
+
+      if (alreadySaved) {
+        showToast({
+          title: "Already saved",
+          message:
+            verseId !== null
+              ? "This verse is in your favorites."
+              : "This chapter is in your favorites.",
+          variant: "info",
+        });
+        return false;
+      }
+
+      const next = [
+        ...favoriteVerses,
+        {
+          id: Date.now(),
+          verse: verseLines,
+          book,
+          chapter,
+          verseId: verseId ?? undefined,
+          date: new Date().toLocaleDateString(),
+        },
+      ];
+
+      setFavoriteVerses(next);
+      saveFavorites(next);
+      showToast({
+        title: "Bookmarked",
+        message:
+          verseId !== null
+            ? "Verse saved to favorites."
+            : "Chapter saved to favorites.",
+        variant: "success",
+      });
+      return true;
+    },
+    [favoriteVerses, showToast],
+  );
+
   const addToFavorites = useCallback(() => {
     if (!verses || bookName === "Select Book" || chapterId === "") return;
-
-    const alreadySaved = favoriteVerses.some(
-      (f) =>
-        f.book === bookName &&
-        f.chapter === chapterId &&
-        (f.verseId ?? null) === activeVerseId,
+    saveFavorite(
+      bookName,
+      chapterId as number,
+      verses.map((e) => `${e.verseId}. ${e.verse}`),
+      activeVerseId,
     );
+  }, [activeVerseId, bookName, chapterId, saveFavorite, verses]);
 
-    if (alreadySaved) {
-      showToast({
-        title: "Already saved",
-        message:
-          activeVerseId !== null
-            ? "This verse is in your favorites."
-            : "This chapter is in your favorites.",
-        variant: "info",
-      });
-      return;
-    }
+  const addVerseToFavorites = useCallback(
+    (verseId: number, verseText: string) => {
+      if (bookName === "Select Book" || chapterId === "") return;
+      saveFavorite(
+        bookName,
+        chapterId as number,
+        [`${verseId}. ${verseText}`],
+        verseId,
+      );
+    },
+    [bookName, chapterId, saveFavorite],
+  );
 
-    const next = [
-      ...favoriteVerses,
-      {
-        id: Date.now(),
-        verse: verses.map((e) => `${e.verseId}. ${e.verse}`),
-        book: bookName,
-        chapter: chapterId as number,
-        verseId: activeVerseId ?? undefined,
-        date: new Date().toLocaleDateString(),
-      },
-    ];
-
-    setFavoriteVerses(next);
-    saveFavorites(next);
-    showToast({
-      title: "Bookmarked",
-      message:
-        activeVerseId !== null
-          ? "Verse saved to favorites."
-          : "Chapter saved to favorites.",
-      variant: "success",
-    });
-  }, [activeVerseId, bookName, chapterId, favoriteVerses, showToast, verses]);
+  const isVerseFavorited = useCallback(
+    (verseId: number) =>
+      favoriteVerses.some(
+        (f) =>
+          f.book === bookName &&
+          f.chapter === chapterId &&
+          f.verseId === verseId,
+      ),
+    [bookName, chapterId, favoriteVerses],
+  );
 
   const removeFavorite = useCallback((id: number) => {
     const next = favoriteVerses.filter((f) => f.id !== id);
@@ -372,28 +442,88 @@ export function useReadingSession() {
       setReadSingleVerse(favorite.verseId !== undefined);
       setVerseId(favorite.verseId ?? "");
       setModal(null);
+      setActiveSection("read");
       void loadChapter(book.id, favorite.chapter, book.book, favorite.verseId);
     },
     [loadChapter],
   );
 
+  const openHistoryEntry = useCallback(
+    (entry: ReadingHistoryEntry) => {
+      setTestamentFilter(entry.testamentFilter);
+      setBookName(entry.bookName);
+      setBookId(entry.bookId);
+      setChapterId(entry.chapterId);
+      setReadSingleVerse(entry.verseId !== undefined);
+      setVerseId(entry.verseId ?? "");
+      setActiveSection("read");
+      void loadChapter(
+        entry.bookId,
+        entry.chapterId,
+        entry.bookName,
+        entry.verseId,
+      );
+    },
+    [loadChapter],
+  );
+
+  const handleClearHistory = useCallback(() => {
+    clearHistory();
+    setReadingHistory([]);
+    showToast({ title: "Cleared", message: "Reading history cleared.", variant: "success" });
+  }, [showToast]);
+
+  const handleAddNote = useCallback(
+    (text: string) => {
+      if (bookName === "Select Book" || chapterId === "") {
+        showToast({
+          title: "No passage selected",
+          message: "Open a reading first to attach a note.",
+          variant: "info",
+        });
+        return;
+      }
+      setNotes(
+        addNote(bookName, chapterId as number, text, activeVerseId ?? undefined),
+      );
+      showToast({ title: "Note saved", message: "Your reflection was saved.", variant: "success" });
+    },
+    [activeVerseId, bookName, chapterId, showToast],
+  );
+
+  const handleUpdateNote = useCallback((id: number, text: string) => {
+    setNotes(updateNote(id, text));
+    showToast({ title: "Updated", message: "Note updated.", variant: "success" });
+  }, [showToast]);
+
+  const handleRemoveNote = useCallback((id: number) => {
+    setNotes(removeNote(id));
+    showToast({ title: "Removed", message: "Note deleted.", variant: "success" });
+  }, [showToast]);
+
+  const handleStartPlan = useCallback(
+    (planId: string) => {
+      setPlanProgress(startPlan(planId));
+      showToast({ title: "Plan started", message: "Your reading plan is now active.", variant: "success" });
+    },
+    [showToast],
+  );
+
+  const handleMarkPlanDay = useCallback(
+    (planId: string) => {
+      setPlanProgress(markPlanDayComplete(planId));
+      showToast({ title: "Day complete", message: "Nice work — day marked complete.", variant: "success" });
+    },
+    [showToast],
+  );
+
+  const navigateToSection = useCallback((section: NavSection) => {
+    setActiveSection(section);
+  }, []);
+
   const showFavorites = useCallback(() => {
-    if (favoriteVerses.length === 0) {
-      setModal({
-        title: "No favorites yet",
-        message: "Bookmark chapters as you read to build your collection.",
-        variant: "info",
-        mode: "info",
-      });
-      return;
-    }
-    setModal({
-      title: "Your favorites",
-      message: `${favoriteVerses.length} saved chapter(s).`,
-      variant: "success",
-      mode: "favorites",
-    });
-  }, [favoriteVerses.length]);
+    setActiveSection("favorites");
+  }, []);
 
   const handleCopyChapter = useCallback(async () => {
     if (!verses || bookName === "Select Book" || chapterId === "") return;
@@ -469,6 +599,11 @@ export function useReadingSession() {
     setModal,
     liveMessage,
     hasLastReading,
+    activeSection,
+    setActiveSection,
+    readingHistory,
+    notes,
+    planProgress,
     currentBook,
     bookList,
     chapterNumbers,
@@ -488,8 +623,18 @@ export function useReadingSession() {
     increaseFont,
     decreaseFont,
     addToFavorites,
+    addVerseToFavorites,
+    isVerseFavorited,
     removeFavorite,
     openFavorite,
+    openHistoryEntry,
+    handleClearHistory,
+    handleAddNote,
+    handleUpdateNote,
+    handleRemoveNote,
+    handleStartPlan,
+    handleMarkPlanDay,
+    navigateToSection,
     showFavorites,
     handleCopyChapter,
     showComingSoon,

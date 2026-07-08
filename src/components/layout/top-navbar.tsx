@@ -35,10 +35,7 @@ export function TopNavbar({ greeting, dateLabel, onMenuClick }: TopNavbarProps) 
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="relative hidden sm:flex">
-              <Bell className="h-5 w-5" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
-            </Button>
+            
             <Avatar>
               <AvatarImage src="/images/read1.jpeg" alt="Mitch" />
               <AvatarFallback>M</AvatarFallback>

@@ -4,30 +4,30 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import {
-  BookOpen,
-  Flame,
-  Moon,
-  Sparkles,
-  Sun,
-} from "lucide-react";
-import { MAIN_NAV } from "@/constants/navigation";
+import { Moon, Sparkles, Sun } from "lucide-react";
+import { MAIN_NAV, type NavItem } from "@/constants/navigation";
 import { getVerseOfTheDay } from "@/constants/quotes";
 import type { ReadingJourney } from "@/lib/readingJourney";
+import type { NavSection } from "@/types/dashboard";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 
 interface SidebarProps {
   journey: ReadingJourney;
   progressPercent: number;
-  onNavClick?: (href: string) => void;
+  activeSection: NavSection;
+  onNavClick?: (item: NavItem) => void;
   className?: string;
 }
 
-export function Sidebar({ journey, progressPercent, onNavClick, className }: SidebarProps) {
+export function Sidebar({
+  journey,
+  progressPercent,
+  activeSection,
+  onNavClick,
+  className,
+}: SidebarProps) {
   const { theme, setTheme } = useTheme();
   const verse = getVerseOfTheDay();
 
@@ -57,65 +57,62 @@ export function Sidebar({ journey, progressPercent, onNavClick, className }: Sid
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-        {MAIN_NAV.map((item, index) => (
-          <motion.div
-            key={item.href}
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.04 }}
-          >
-            <a
-              href={item.comingSoon ? undefined : item.href}
-              aria-disabled={item.comingSoon}
-              onClick={(event) => {
-                if (item.comingSoon) {
-                  event.preventDefault();
-                  return;
-                }
-                onNavClick?.(item.href);
-              }}
-              className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
-                item.comingSoon
-                  ? "cursor-not-allowed text-muted-foreground/70 hover:bg-muted/40"
-                  : "text-muted-foreground hover:bg-primary/5 hover:text-primary",
-              )}
+      <nav className="flex-1 overflow-y-auto p-4">
+        <div className="flex min-h-full flex-col gap-4">
+          {MAIN_NAV.map((item, index) => (
+            <motion.div
+              key={item.label}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.04 }}
             >
-              <item.icon className="h-4 w-4 shrink-0" />
-              <span className="flex-1">{item.label}</span>
-              {item.comingSoon && (
-                <Badge
-                  variant="gold"
-                  className="pointer-events-none whitespace-nowrap scale-95 opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100"
-                >
-                  Coming soon
-                </Badge>
-              )}
-            </a>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault();
+                  onNavClick?.(item);
+                }}
+                className={cn(
+                  "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all",
+                  activeSection === item.section
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-primary/5 hover:text-primary",
+                )}
+              >
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span className="flex-1">{item.label}</span>
+              </button>
+            </motion.div>
+          ))}
+
+          <motion.div
+            className="mt-auto"
+            animate={{ y: [0, -220, 0] }}
+            transition={{
+              duration: 12,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "easeInOut",
+            }}
+          >
+            <Card className="glass border-white/20">
+              <CardContent className="p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-gold" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Verse of the Day
+                  </span>
+                </div>
+                <p className="font-scripture text-sm italic leading-relaxed text-foreground/90">
+                  &ldquo;{verse.text}&rdquo;
+                </p>
+                <p className="mt-2 text-xs font-medium text-primary">{verse.reference}</p>
+              </CardContent>
+            </Card>
           </motion.div>
-        ))}
+        </div>
       </nav>
 
       <div className="space-y-3 border-t border-border/60 p-4">
-
-        <Card className="glass border-white/20">
-          <CardContent className="p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-gold" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Verse of the Day
-              </span>
-            </div>
-            <p className="font-scripture text-sm italic leading-relaxed text-foreground/90">
-              &ldquo;{verse.text}&rdquo;
-            </p>
-            <p className="mt-2 text-xs font-medium text-primary">{verse.reference}</p>
-          </CardContent>
-        </Card>
-
-    
-
         <Button
           variant="outline"
           className="w-full justify-between"

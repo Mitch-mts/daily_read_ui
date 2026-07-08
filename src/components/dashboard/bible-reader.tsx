@@ -6,6 +6,7 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
+  Heart,
   Minus,
   Plus,
   Share2,
@@ -17,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 const VERSES_PER_PAGE = 5;
 
@@ -39,18 +41,42 @@ function ReadingSkeleton() {
 function VerseText({
   verses,
   mode,
+  onFavoriteVerse,
+  isVerseFavorited,
 }: {
   verses: ParsedVerse[];
   mode: ReadingMode;
+  onFavoriteVerse?: (verseId: number, verseText: string) => void;
+  isVerseFavorited?: (verseId: number) => boolean;
 }) {
   return (
     <article className={`mx-auto w-full max-w-2xl font-scripture ${fontSizeClass(mode)}`}>
-      {verses.map((entry) => (
-        <p key={entry.verseId} className="verse-line">
-          <sup className="verse-num">{entry.verseId}</sup>
-          <span>{entry.verse}</span>
-        </p>
-      ))}
+      {verses.map((entry) => {
+        const saved = isVerseFavorited?.(entry.verseId) ?? false;
+        return (
+          <p key={entry.verseId} className="verse-line group/verse flex items-start gap-2">
+            <span className="flex-1">
+              <sup className="verse-num">{entry.verseId}</sup>
+              <span>{entry.verse}</span>
+            </span>
+            {onFavoriteVerse && (
+              <button
+                type="button"
+                onClick={() => onFavoriteVerse(entry.verseId, entry.verse)}
+                aria-label={saved ? "Verse saved" : "Save verse to favorites"}
+                className={cn(
+                  "mt-1 shrink-0 rounded-lg p-1.5 opacity-0 transition-all group-hover/verse:opacity-100",
+                  saved
+                    ? "text-primary opacity-100"
+                    : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                )}
+              >
+                <Heart className={cn("h-4 w-4", saved && "fill-current")} />
+              </button>
+            )}
+          </p>
+        );
+      })}
     </article>
   );
 }
@@ -73,6 +99,8 @@ interface BibleReaderProps {
   onDecreaseFont: () => void;
   onShare: () => void;
   onBookmark: () => void;
+  onFavoriteVerse?: (verseId: number, verseText: string) => void;
+  isVerseFavorited?: (verseId: number) => boolean;
   onClear: () => void;
   onAudio: () => void;
   chapterProgress?: number;
@@ -96,6 +124,8 @@ export function BibleReader({
   onDecreaseFont,
   onShare,
   onBookmark,
+  onFavoriteVerse,
+  isVerseFavorited,
   onClear,
   onAudio,
 }: BibleReaderProps) {
@@ -234,7 +264,12 @@ export function BibleReader({
                 transition={{ duration: 0.2 }}
                 className="w-full"
               >
-                <VerseText verses={pageVerses} mode={readingMode} />
+                <VerseText
+                  verses={pageVerses}
+                  mode={readingMode}
+                  onFavoriteVerse={onFavoriteVerse}
+                  isVerseFavorited={isVerseFavorited}
+                />
               </motion.div>
             </AnimatePresence>
           )}
