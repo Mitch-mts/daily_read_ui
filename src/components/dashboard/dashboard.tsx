@@ -279,7 +279,7 @@ export function Dashboard() {
         </main>
 
         <footer className="border-t border-border/60 px-8 py-6 text-center text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} Daily Bible Reader · Crafted by Mitch
+          &copy; Daily Bible Reader · Crafted by Mitch
         </footer>
       </div>
 

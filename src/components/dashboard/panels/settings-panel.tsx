@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Minus, Moon, Plus, Sun } from "lucide-react";
 import type { ReadingMode } from "@/types/bible";
@@ -23,7 +24,14 @@ export function SettingsPanel({
   onIncreaseFont,
   onDecreaseFont,
 }: SettingsPanelProps) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && resolvedTheme === "dark";
 
   return (
     <section className="space-y-6">
@@ -48,9 +56,9 @@ export function SettingsPanel({
             </div>
             <Button
               variant="outline"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              onClick={() => setTheme(isDark ? "light" : "dark")}
             >
-              {theme === "dark" ? (
+              {isDark ? (
                 <>
                   <Sun className="mr-2 h-4 w-4" />
                   Light mode
@@ -79,10 +87,20 @@ export function SettingsPanel({
               </p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" onClick={onDecreaseFont} aria-label="Decrease font">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onDecreaseFont}
+                aria-label="Decrease font"
+              >
                 <Minus className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" onClick={onIncreaseFont} aria-label="Increase font">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onIncreaseFont}
+                aria-label="Increase font"
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>

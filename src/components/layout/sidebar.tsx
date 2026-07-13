@@ -7,7 +7,7 @@ import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { Moon, Sparkles, Sun } from "lucide-react";
 import { MAIN_NAV, type NavItem } from "@/constants/navigation";
-import { getVerseOfTheDay } from "@/constants/quotes";
+import { DAILY_VERSES, getVerseOfTheDay, type DailyVerse } from "@/constants/quotes";
 import type { ReadingJourney } from "@/lib/readingJourney";
 import type { NavSection } from "@/types/dashboard";
 import { cn } from "@/lib/utils";
@@ -23,17 +23,21 @@ interface SidebarProps {
 }
 
 export function Sidebar({
-  journey,
-  progressPercent,
   activeSection,
   onNavClick,
   className,
 }: SidebarProps) {
-  const { theme, setTheme } = useTheme();
-  const verse = getVerseOfTheDay();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [verse, setVerse] = useState<DailyVerse>(DAILY_VERSES[0]);
   const floatAreaRef = useRef<HTMLDivElement>(null);
   const verseCardRef = useRef<HTMLDivElement>(null);
   const [travelDistance, setTravelDistance] = useState(0);
+
+  useEffect(() => {
+    setMounted(true);
+    setVerse(getVerseOfTheDay());
+  }, []);
 
   useEffect(() => {
     const area = floatAreaRef.current;
@@ -42,7 +46,6 @@ export function Sidebar({
 
     const updateTravel = () => {
       const available = area.clientHeight - card.offsetHeight;
-      // Keep a small gap so the card never covers the last menu item.
       setTravelDistance(Math.max(0, available - 8));
     };
 
@@ -54,6 +57,8 @@ export function Sidebar({
 
     return () => observer.disconnect();
   }, []);
+
+  const isDark = mounted && resolvedTheme === "dark";
 
   return (
     <aside
@@ -152,15 +157,11 @@ export function Sidebar({
         <Button
           variant="outline"
           className="w-full justify-between"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          onClick={() => setTheme(isDark ? "light" : "dark")}
         >
           <span className="flex items-center gap-2">
-            {theme === "dark" ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-            {theme === "dark" ? "Light mode" : "Dark mode"}
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {isDark ? "Light mode" : "Dark mode"}
           </span>
         </Button>
       </div>

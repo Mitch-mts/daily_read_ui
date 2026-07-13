@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Sparkles } from "lucide-react";
-import { getVerseOfTheDay } from "@/constants/quotes";
+import { DAILY_VERSES, getVerseOfTheDay, type DailyVerse } from "@/constants/quotes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -17,18 +18,22 @@ export function HeroSection({
   onContinueReading,
   hasLastReading,
 }: HeroSectionProps) {
-  const verse = getVerseOfTheDay();
-  const today = new Date().toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  const [verse, setVerse] = useState<DailyVerse>(DAILY_VERSES[0]);
+  const [today, setToday] = useState("Today");
+
+  useEffect(() => {
+    setVerse(getVerseOfTheDay());
+    setToday(
+      new Date().toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }),
+    );
+  }, []);
 
   return (
-    <section
-      id="home"
-      className="relative overflow-hidden rounded-3xl"
-    >
+    <section id="home" className="relative overflow-hidden rounded-3xl">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url(/images/header.jpg)" }}
@@ -58,11 +63,7 @@ export function HeroSection({
               Start Reading
             </Button>
             {hasLastReading && (
-              <Button
-                size="lg"
-                variant="glass"
-                onClick={onContinueReading}
-              >
+              <Button size="lg" variant="glass" onClick={onContinueReading}>
                 Continue Reading
               </Button>
             )}

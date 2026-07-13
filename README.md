@@ -49,6 +49,23 @@ npm run build
 
 Netlify configuration is in `netlify.toml` using `@netlify/plugin-nextjs`.
 
+## Progressive Web App (PWA)
+
+This app is installable as a standalone PWA via **Serwist** (`@serwist/next`).
+
+- Manifest: `src/app/manifest.ts` → `/manifest.webmanifest`
+- Service worker: `src/app/sw.ts` → generated `public/sw.js` on production builds
+- Offline shell: `/~offline`
+- `/api/*` responses are **never cached** (always network)
+
+The service worker is disabled in `next dev`. Use a production build to verify installability:
+
+```bash
+npm run build && npm run start
+```
+
+Then open the site over HTTPS (or `localhost`) and run Lighthouse → Application criteria.
+
 ## Migration notes
 
 See [MIGRATION.md](./MIGRATION.md) for details on the CRA → Next.js refactor and breaking changes.

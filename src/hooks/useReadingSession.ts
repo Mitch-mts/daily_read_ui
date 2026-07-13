@@ -60,7 +60,17 @@ export function useReadingSession() {
   const [verses, setVerses] = useState<ParsedVerse[] | null>(null);
   const [favoriteVerses, setFavoriteVerses] = useState<FavoriteVerse[]>([]);
   const [expandedFavoriteId, setExpandedFavoriteId] = useState<number | null>(null);
-  const [journey, setJourney] = useState(loadJourney);
+  const [journey, setJourney] = useState(() => {
+    // Always start with the same default on server + first client paint.
+    // Local progress is loaded in useEffect after mount.
+    return {
+      chaptersReadSession: 0,
+      chaptersReadWeek: 0,
+      streak: 0,
+      lastReadDate: null as string | null,
+      weekStart: "",
+    };
+  });
   const [readingMode, setReadingMode] = useState<ReadingMode>("normal");
   const [toast, setToast] = useState<ToastState | null>(null);
   const [modal, setModal] = useState<ModalState | null>(null);
