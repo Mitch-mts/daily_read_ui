@@ -83,11 +83,11 @@ export function Dashboard() {
             </div>
             <QuickActions
               onRandomVerse={() => {
-                session.navigateToSection("read");
-                session.handleRandomVerse();
+                void session.handleRandomVerse();
               }}
+              onReadBible={() => session.navigateToSection("read")}
               onFavorites={session.showFavorites}
-              onComingSoon={session.showComingSoon}
+              onHistory={() => session.navigateToSection("history")}
             />
           </div>
         );
@@ -279,7 +279,7 @@ export function Dashboard() {
         </main>
 
         <footer className="border-t border-border/60 px-8 py-6 text-center text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} Daily Bible Reader · Crafted with care
+          &copy; {new Date().getFullYear()} Daily Bible Reader · Crafted by Mitch
         </footer>
       </div>
 

@@ -2,14 +2,10 @@
 
 import { motion } from "framer-motion";
 import {
-  Bookmark,
-  Calendar,
+  BookOpen,
   Dices,
   Heart,
   History,
-  NotebookPen,
-  Search,
-  Share2,
   type LucideIcon,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,14 +19,16 @@ interface QuickAction {
 
 interface QuickActionsProps {
   onRandomVerse: () => void;
+  onReadBible: () => void;
   onFavorites: () => void;
-  onComingSoon: (feature: string) => void;
+  onHistory: () => void;
 }
 
 export function QuickActions({
   onRandomVerse,
+  onReadBible,
   onFavorites,
-  onComingSoon,
+  onHistory,
 }: QuickActionsProps) {
   const actions: QuickAction[] = [
     {
@@ -40,46 +38,22 @@ export function QuickActions({
       onClick: onRandomVerse,
     },
     {
-      label: "Reading Plans",
-      subtitle: "Structured journeys",
-      icon: Calendar,
-      onClick: () => onComingSoon("Reading Plans"),
+      label: "Read Bible",
+      subtitle: "Open the reader",
+      icon: BookOpen,
+      onClick: onReadBible,
     },
     {
-      label: "Prayer Journal",
-      subtitle: "Record your prayers",
-      icon: Heart,
-      onClick: () => onComingSoon("Prayer Journal"),
-    },
-    {
-      label: "Bookmarks",
+      label: "Favorites",
       subtitle: "Saved passages",
-      icon: Bookmark,
+      icon: Heart,
       onClick: onFavorites,
-    },
-    {
-      label: "Notes",
-      subtitle: "Your reflections",
-      icon: NotebookPen,
-      onClick: () => onComingSoon("Notes"),
-    },
-    {
-      label: "Search Bible",
-      subtitle: "Find any verse",
-      icon: Search,
-      onClick: () => onComingSoon("Search Bible"),
-    },
-    {
-      label: "Share Verse",
-      subtitle: "Spread the Word",
-      icon: Share2,
-      onClick: () => onComingSoon("Share Verse"),
     },
     {
       label: "History",
       subtitle: "Past readings",
       icon: History,
-      onClick: () => onComingSoon("History"),
+      onClick: onHistory,
     },
   ];
 

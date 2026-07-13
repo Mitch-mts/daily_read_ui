@@ -298,7 +298,7 @@ export function useReadingSession() {
     void loadChapter(bookId, chapterId + 1, bookName);
   }, [activeVerseId, bookId, bookName, canGoNext, chapterId, loadChapter]);
 
-  const handleRandomVerse = useCallback(() => {
+  const handleRandomVerse = useCallback(async () => {
     const randomBook = BOOKS[Math.floor(Math.random() * BOOKS.length)];
     const randomChapter = Math.floor(Math.random() * randomBook.chapters) + 1;
 
@@ -306,17 +306,41 @@ export function useReadingSession() {
     setBookId(randomBook.id);
     setChapterId(randomChapter);
     setTestamentFilter(randomBook.testament);
-    setReadSingleVerse(false);
-    setVerseId("");
+    setActiveSection("read");
+    setLiveMessage(
+      `Finding a verse in ${randomBook.book} chapter ${randomChapter}…`,
+    );
 
-    showToast({
-      title: "Random selection",
-      message: `${randomBook.book} Chapter ${randomChapter}`,
-      variant: "info",
-    });
+    try {
+      const data = await fetchChapter(randomBook.id, randomChapter);
+      if (!data.result.length) {
+        throw new Error("No verses found for that selection.");
+      }
 
-    void loadChapter(randomBook.id, randomChapter, randomBook.book);
-  }, [loadChapter, showToast]);
+      const randomVerse =
+        data.result[Math.floor(Math.random() * data.result.length)];
+      setReadSingleVerse(true);
+      setVerseId(randomVerse.verseId);
+
+      showToast({
+        title: "Random verse",
+        message: `${randomBook.book} ${randomChapter}:${randomVerse.verseId}`,
+        variant: "info",
+      });
+
+      void loadChapter(
+        randomBook.id,
+        randomChapter,
+        randomBook.book,
+        randomVerse.verseId,
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not load a random verse";
+      setLiveMessage(message);
+      showToast({ title: "Error", message, variant: "error" });
+    }
+  }, [fetchChapter, loadChapter, showToast]);
 
   const handleClearReading = useCallback(() => {
     setVerses(null);
