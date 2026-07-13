@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { Moon, Sparkles, Sun } from "lucide-react";
@@ -30,6 +31,29 @@ export function Sidebar({
 }: SidebarProps) {
   const { theme, setTheme } = useTheme();
   const verse = getVerseOfTheDay();
+  const floatAreaRef = useRef<HTMLDivElement>(null);
+  const verseCardRef = useRef<HTMLDivElement>(null);
+  const [travelDistance, setTravelDistance] = useState(0);
+
+  useEffect(() => {
+    const area = floatAreaRef.current;
+    const card = verseCardRef.current;
+    if (!area || !card) return;
+
+    const updateTravel = () => {
+      const available = area.clientHeight - card.offsetHeight;
+      // Keep a small gap so the card never covers the last menu item.
+      setTravelDistance(Math.max(0, available - 8));
+    };
+
+    updateTravel();
+
+    const observer = new ResizeObserver(updateTravel);
+    observer.observe(area);
+    observer.observe(card);
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <aside
@@ -57,8 +81,8 @@ export function Sidebar({
         </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-4">
-        <div className="flex min-h-full flex-col gap-4">
+      <nav className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
+        <div className="shrink-0 space-y-1">
           {MAIN_NAV.map((item, index) => (
             <motion.div
               key={item.label}
@@ -84,10 +108,20 @@ export function Sidebar({
               </button>
             </motion.div>
           ))}
+        </div>
 
+        <div
+          ref={floatAreaRef}
+          className="relative mt-4 min-h-[140px] flex-1 overflow-hidden"
+        >
           <motion.div
-            className="mt-auto"
-            animate={{ y: [0, -220, 0] }}
+            ref={verseCardRef}
+            className="absolute bottom-0 left-0 right-0"
+            animate={
+              travelDistance > 0
+                ? { y: [0, -travelDistance, 0] }
+                : { y: 0 }
+            }
             transition={{
               duration: 12,
               repeat: Number.POSITIVE_INFINITY,
@@ -105,7 +139,9 @@ export function Sidebar({
                 <p className="font-scripture text-sm italic leading-relaxed text-foreground/90">
                   &ldquo;{verse.text}&rdquo;
                 </p>
-                <p className="mt-2 text-xs font-medium text-primary">{verse.reference}</p>
+                <p className="mt-2 text-xs font-medium text-primary">
+                  {verse.reference}
+                </p>
               </CardContent>
             </Card>
           </motion.div>
